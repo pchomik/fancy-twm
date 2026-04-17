@@ -1,0 +1,23 @@
+[[keybindings]]
+binding = "Win+Right"
+command = "MoveRight"
+
+[[keybindings]]
+binding = "Win+Left"
+command = "MoveLeft"
+
+[[virtual_desktops]]
+name = "1"
+workspaces = [{ layout = "TwoColumns" }, { layout = "Monocle" }]
+
+[[virtual_desktops]]
+name = "2"
+workspaces = [{ layout = "Monocle" }, { layout = "Monocle" }]
+
+[[virtual_desktops]]
+name = "3"
+workspaces = [{ layout = "Monocle" }, { layout = "Monocle" }]
+
+[[virtual_desktops]]
+name = "4"
+workspaces = [{ layout = "Monocle" }, { layout = "Monocle" }]
