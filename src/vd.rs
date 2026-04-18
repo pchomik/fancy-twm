@@ -31,7 +31,7 @@ pub fn move_active_window_to_next_virtualenv() {
 pub fn move_active_window_to_next_virtualenv() {
     unsafe {
         let hwnd = GetForegroundWindow();
-        if hwnd.0 != 0 {
+        if !hwnd.is_invalid() {
             if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
                 if let Some(current_index) = desktops.iter().position(|d| d == &current) {
                     if current_index < desktops.len() - 1 {
@@ -65,7 +65,7 @@ pub fn move_active_window_to_prev_virtualenv() {
 pub fn move_active_window_to_prev_virtualenv() {
     unsafe {
         let hwnd = GetForegroundWindow();
-        if hwnd.0 != 0 {
+        if !hwnd.is_invalid() {
             if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
                 if let Some(current_index) = desktops.iter().position(|d| d == &current) {
                     if current_index > 0 {
