@@ -3,6 +3,11 @@ name = "fancy-twm"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["windows10"]
+windows10 = ["winvd_win10", "windows_win10"]
+windows11 = ["winvd_win11", "windows_win11"]
+
 [dependencies]
 anyhow = "1.0.102"
 crossbeam-channel = "0.5.15"
@@ -14,7 +19,7 @@ pollster = "0.4.0"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.2"
 tray-icon = "0.22.0"
-windows = { version = "0.62.2", features = [
+windows_win10 = { package = "windows", version = "0.44.0", optional = true, features = [
     "Foundation",
     "Media_Control",
     "Win32_Foundation",
@@ -22,7 +27,19 @@ windows = { version = "0.62.2", features = [
     "Win32_Media_Audio_Endpoints",
     "Win32_System_Com",
     "Win32_System_Com_StructuredStorage",
-    "Win32_System_Variant",
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_WindowsAndMessaging",
 ] }
+windows_win11 = { package = "windows", version = "0.58.0", optional = true, features = [
+    "Foundation",
+    "Media_Control",
+    "Win32_Foundation",
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+winvd_win10 = { package = "winvd", version = "0.0.11", optional = true }
+winvd_win11 = { package = "winvd", version = "0.0.48", optional = true }

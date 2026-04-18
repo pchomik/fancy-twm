@@ -1,5 +1,12 @@
 use anyhow::Result;
-use windows::Win32::UI::WindowsAndMessaging::{
+
+#[cfg(feature = "windows10")]
+use windows_win10::Win32::UI::WindowsAndMessaging::{
+    DispatchMessageW, MSG, PM_REMOVE, PeekMessageW, TranslateMessage, WM_QUIT,
+};
+
+#[cfg(feature = "windows11")]
+use windows_win11::Win32::UI::WindowsAndMessaging::{
     DispatchMessageW, MSG, PM_REMOVE, PeekMessageW, TranslateMessage, WM_QUIT,
 };
 

@@ -5,6 +5,7 @@ mod app;
 mod config;
 mod hotkey;
 mod message;
+mod vd;
 
 fn main() -> Result<()> {
     let config_path = config_dir()

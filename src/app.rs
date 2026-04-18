@@ -1,6 +1,7 @@
-use crate::config::AppConfig;
+use crate::config::{AppConfig, Command};
 use crate::hotkey::HotKeysController;
 use crate::message::pump_windows_messages;
+use crate::vd::{move_active_window_to_next_virtualenv, move_active_window_to_prev_virtualenv};
 // Result allows to return any Error without changing signature.
 // Result also allows to use ? for any case.
 // Context allows to define custom error message.
@@ -44,7 +45,12 @@ impl App {
                 break;
             }
 
-            self.hotkeys.read();
+            if let Some(action) = self.hotkeys.read() {
+                match action {
+                    Command::MoveToNextVirtualDesktop => move_active_window_to_next_virtualenv(),
+                    Command::MoveToPrevVirtualDesktop => move_active_window_to_prev_virtualenv(),
+                }
+            }
 
             thread::sleep(Duration::from_millis(25));
         }

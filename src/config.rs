@@ -20,10 +20,8 @@ impl AppConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 pub enum Command {
-    MoveRight,
-    MoveLeft,
-    MoveUp,
-    MoveDown,
+    MoveToNextVirtualDesktop,
+    MoveToPrevVirtualDesktop,
 }
 
 #[derive(Debug, Deserialize, Clone)]
