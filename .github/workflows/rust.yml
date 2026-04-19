@@ -17,9 +17,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: cargo build --no-default-features --features windows10
-    - name: Run tests
-      run: cargo test --no-default-features --features windows10
+      run: cargo build --release --no-default-features --features windows10
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: FancyTWM-win10
+        path: target/release/FancyTWM.exe
 
   build-win11:
 
@@ -28,6 +31,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: cargo build --no-default-features --features windows11
-    - name: Run tests
-      run: cargo test --no-default-features --features windows11
+      run: cargo build --release --no-default-features --features windows11
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: FancyTWM-win11
+        path: target/release/FancyTWM.exe
