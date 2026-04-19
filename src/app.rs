@@ -1,7 +1,11 @@
 use crate::config::{AppConfig, Command};
 use crate::hotkey::HotKeysController;
 use crate::message::pump_windows_messages;
-use crate::vd::{move_active_window_to_next_virtualenv, move_active_window_to_prev_virtualenv};
+use crate::tray::TrayController;
+use crate::vd::{
+    move_active_window_to_next_virtual_desktop, move_active_window_to_prev_virtual_desktop,
+    move_active_window_to_virtual_desktop,
+};
 // Result allows to return any Error without changing signature.
 // Result also allows to use ? for any case.
 // Context allows to define custom error message.
@@ -17,6 +21,7 @@ static RUNNING: AtomicBool = AtomicBool::new(true);
 pub struct App {
     pub config: Arc<AppConfig>,
     pub hotkeys: HotKeysController,
+    pub tray: TrayController,
 }
 
 impl App {
@@ -26,7 +31,12 @@ impl App {
         // Arc is perfect to share variable and still have read and write access.
         let config = Arc::new(config);
         let hotkeys = HotKeysController::new(config.clone())?;
-        Ok(Self { config, hotkeys })
+        let tray = TrayController::new()?;
+        Ok(Self {
+            config,
+            hotkeys,
+            tray,
+        })
     }
 
     pub fn run(&mut self) -> Result<()> {
@@ -46,11 +56,22 @@ impl App {
             }
 
             if let Some(action) = self.hotkeys.read() {
-                match action {
-                    Command::MoveToNextVirtualDesktop => move_active_window_to_next_virtualenv(),
-                    Command::MoveToPrevVirtualDesktop => move_active_window_to_prev_virtualenv(),
+                match action.command {
+                    Command::MoveToNextVirtualDesktop => {
+                        move_active_window_to_next_virtual_desktop()
+                    }
+                    Command::MoveToPrevVirtualDesktop => {
+                        move_active_window_to_prev_virtual_desktop()
+                    }
+                    Command::MoveToVirtualDesktop => {
+                        if let Some(args) = action.args {
+                            move_active_window_to_virtual_desktop(&args[0]);
+                        }
+                    }
                 }
             }
+
+            self.tray.read();
 
             thread::sleep(Duration::from_millis(25));
         }

@@ -22,12 +22,14 @@ impl AppConfig {
 pub enum Command {
     MoveToNextVirtualDesktop,
     MoveToPrevVirtualDesktop,
+    MoveToVirtualDesktop,
 }
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Keybinding {
-    pub command: Command,
     pub binding: String,
+    pub command: Command,
+    pub args: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

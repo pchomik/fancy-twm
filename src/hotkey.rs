@@ -8,7 +8,7 @@ use crate::config::{AppConfig, Command, Keybinding};
 pub struct HotKeysController {
     config: Arc<AppConfig>,
     manager: GlobalHotKeyManager,
-    registered: Vec<(HotKey, Command)>,
+    registered: Vec<(HotKey, Keybinding)>,
 }
 
 impl HotKeysController {
@@ -32,12 +32,12 @@ impl HotKeysController {
                     .register(hotkey)
                     .context(format!("failed to register key: {}", keybinding.binding))
                     .unwrap();
-                self.registered.push((hotkey, keybinding.command.clone()));
+                self.registered.push((hotkey, keybinding.clone()));
                 println!("Registered hotkey: {:?}", hotkey)
             });
     }
 
-    pub fn read(&self) -> Option<Command> {
+    pub fn read(&self) -> Option<Keybinding> {
         if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
             if event.state == HotKeyState::Pressed {
                 println!("Key Event: {:?}", event);
