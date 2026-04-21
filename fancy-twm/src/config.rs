@@ -41,9 +41,8 @@ pub struct VirtualDesktop {
 #[derive(Debug, Deserialize, Clone)]
 pub enum Layout {
     Monocle,
-    TwoColumns,
-    Square,
-    TwoRows,
+    Columns,
+    Rows,
 }
 
 #[derive(Debug, Deserialize, Clone)]

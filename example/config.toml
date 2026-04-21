@@ -28,7 +28,7 @@ args = ["3"]
 
 [[virtual_desktops]]
 name = "1"
-workspaces = [{ layout = "TwoColumns" }, { layout = "Monocle" }]
+workspaces = [{ layout = "Columns" }, { layout = "Monocle" }]
 
 [[virtual_desktops]]
 name = "2"

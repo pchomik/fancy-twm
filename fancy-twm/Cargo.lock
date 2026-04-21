@@ -3,6 +3,28 @@
 version = 4
 
 [[package]]
+name = "FancyTWM"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crossbeam-channel 0.5.15",
+ "ctrlc",
+ "dirs",
+ "global-hotkey",
+ "image",
+ "png 0.18.1",
+ "pollster",
+ "serde",
+ "toml 1.1.2+spec-1.1.0",
+ "tray-icon",
+ "windows 0.44.0",
+ "windows 0.58.0",
+ "winres",
+ "winvd 0.0.11",
+ "winvd 0.0.48",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -476,37 +498,6 @@ dependencies = [
  "rayon-core",
  "smallvec",
  "zune-inflate",
-]
-
-[[package]]
-name = "fancycore"
-version = "0.1.0"
-
-[[package]]
-name = "fancyctl"
-version = "0.1.0"
-
-[[package]]
-name = "fancytwm"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "crossbeam-channel 0.5.15",
- "ctrlc",
- "dirs",
- "fancycore",
- "global-hotkey",
- "image",
- "png 0.18.1",
- "pollster",
- "serde",
- "toml 1.1.2+spec-1.1.0",
- "tray-icon",
- "windows 0.44.0",
- "windows 0.58.0",
- "winres",
- "winvd 0.0.11",
- "winvd 0.0.48",
 ]
 
 [[package]]
@@ -1933,7 +1924,7 @@ dependencies = [
  "toml_datetime 1.1.1+spec-1.1.0",
  "toml_parser",
  "toml_writer",
- "winnow 1.0.2",
+ "winnow 1.0.1",
 ]
 
 [[package]]
@@ -1984,7 +1975,7 @@ version = "1.1.2+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
 dependencies = [
- "winnow 1.0.2",
+ "winnow 1.0.1",
 ]
 
 [[package]]
@@ -2440,9 +2431,9 @@ dependencies = [
 
 [[package]]
 name = "winnow"
-version = "1.0.2"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ee1708bef14716a11bae175f579062d4554d95be2c6829f518df847b7b3fdd0"
+checksum = "09dac053f1cd375980747450bfc7250c264eaae0583872e845c0c7cd578872b5"
 
 [[package]]
 name = "winres"

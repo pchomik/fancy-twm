@@ -21,8 +21,10 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: FancyTWM-win10
-        path: target/release/FancyTWM.exe
+        name: fancytwm-win10
+        path: |
+          target/release/fancytwm.exe
+          target/release/fancyctl.exe
 
   build-win11:
 
@@ -35,5 +37,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: FancyTWM-win11
-        path: target/release/FancyTWM.exe
+        name: fancytwm-win11
+        path: |
+          target/release/fancytwm.exe
+          target/release/fancyctl.exe

@@ -6,6 +6,7 @@ use dirs::config_dir;
 mod app;
 mod config;
 mod hotkey;
+mod layout;
 mod message;
 mod tray;
 mod vd;

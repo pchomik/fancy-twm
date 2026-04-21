@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use image;
 use tray_icon::{
-    Icon, TrayIcon, TrayIconBuilder,
     menu::{Menu, MenuEvent, MenuItem},
+    Icon, TrayIcon, TrayIconBuilder,
 };
 
 pub struct TrayController {
@@ -18,7 +18,7 @@ impl TrayController {
         let icon = TrayIconBuilder::new()
             .with_icon(TrayController::load_icon()?)
             .with_menu(Box::new(menu))
-            .with_tooltip("famcy-twm")
+            .with_tooltip("FancyTWM")
             .build()
             .context("Failed to start tray icon")?;
         Ok(Self { icon, menu_items })
