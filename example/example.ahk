@@ -1,0 +1,3 @@
+/*
+For now this is placeholder to show how to build key bindings for FancyTWM application.
+*/
