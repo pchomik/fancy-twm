@@ -23,6 +23,9 @@ pub enum Command {
     MoveToNextVirtualDesktop,
     MoveToPrevVirtualDesktop,
     MoveToVirtualDesktop,
+    ChangeToNextVirtualDesktop,
+    ChangeToPrevVirtualDesktop,
+    ChangeToVirtualDesktop,
 }
 
 #[derive(Debug, Deserialize, Clone)]

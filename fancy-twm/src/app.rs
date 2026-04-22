@@ -3,6 +3,7 @@ use crate::hotkey::HotKeysController;
 use crate::message::pump_windows_messages;
 use crate::tray::TrayController;
 use crate::vd::{
+    change_to_next_virtual_desktop, change_to_prev_virtual_desktop, change_to_virtual_desktop,
     move_active_window_to_next_virtual_desktop, move_active_window_to_prev_virtual_desktop,
     move_active_window_to_virtual_desktop,
 };
@@ -66,6 +67,17 @@ impl App {
                     Command::MoveToVirtualDesktop => {
                         if let Some(args) = action.args {
                             move_active_window_to_virtual_desktop(&args[0]);
+                        }
+                    }
+                    Command::ChangeToNextVirtualDesktop => {
+                        change_to_next_virtual_desktop();
+                    }
+                    Command::ChangeToPrevVirtualDesktop => {
+                        change_to_prev_virtual_desktop();
+                    }
+                    Command::ChangeToVirtualDesktop => {
+                        if let Some(args) = action.args {
+                            change_to_virtual_desktop(&args[0]);
                         }
                     }
                 }

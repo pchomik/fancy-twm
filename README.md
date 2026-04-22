@@ -35,12 +35,24 @@ Three tiling layouts are available:
 - [x] Configuration logic
 - [x] Tray app
 - [x] Layouts
-- [ ] Virtual desktop management
-  - Move to specific virtual desktop
-- [ ] FancyTWM client (fancyctl)
-- [ ] FancyTWM server
-- [ ] AHK keybindings
+- [x] Virtual desktop management
 - [ ] Tagging logic
 - [ ] Move within monitor logic
 - [ ] Move across monitors logic
 - [ ] New window tagging (if needed)
+- [ ] FancyTWM server
+- [ ] FancyTWM client (fancyctl)
+
+## Limitations
+
+### Keyboard Shortcut Conflicts
+
+Not all Windows shortcuts can be overridden, e.g., Win+Ctrl+Left will produce two jumps because the builtin shortcut will work as well.
+
+### Visual Blink on Desktop Switch
+
+The application may blink when switching desktops with arg.
+
+### Windows 10 Virtual Desktop Offset
+
+In Windows 10, there is a need to add one extra Virtual Desktop because the library used under the hood does not return the last Virtual Desktop.
