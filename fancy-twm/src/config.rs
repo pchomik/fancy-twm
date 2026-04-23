@@ -5,7 +5,6 @@ use std::path::Path;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
-    pub keybindings: Vec<Keybinding>,
     pub virtual_desktops: Vec<VirtualDesktop>,
 }
 
@@ -16,23 +15,6 @@ impl AppConfig {
         println!("{:?}", config);
         Ok(config)
     }
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub enum Command {
-    MoveToNextVirtualDesktop,
-    MoveToPrevVirtualDesktop,
-    MoveToVirtualDesktop,
-    ChangeToNextVirtualDesktop,
-    ChangeToPrevVirtualDesktop,
-    ChangeToVirtualDesktop,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Keybinding {
-    pub binding: String,
-    pub command: Command,
-    pub args: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

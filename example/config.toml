@@ -1,31 +1,3 @@
-[[keybindings]]
-binding = "Control+Alt+PageUp"
-command = "MoveToNextVirtualDesktop"
-
-[[keybindings]]
-binding = "Control+Alt+PageDown"
-command = "MoveToPrevVirtualDesktop"
-
-[[keybindings]]
-binding = "Shift+Alt+1"
-command = "MoveToVirtualDesktop"
-args = ["0"]
-
-[[keybindings]]
-binding = "Shift+Alt+2"
-command = "MoveToVirtualDesktop"
-args = ["1"]
-
-[[keybindings]]
-binding = "Shift+Alt+3"
-command = "MoveToVirtualDesktop"
-args = ["2"]
-
-[[keybindings]]
-binding = "Shift+Alt+4"
-command = "MoveToVirtualDesktop"
-args = ["3"]
-
 [[virtual_desktops]]
 name = "1"
 workspaces = [{ layout = "Columns" }, { layout = "Monocle" }]

@@ -1,6 +1,7 @@
-use crate::config::{AppConfig, Command};
-use crate::hotkey::HotKeysController;
+use crate::config::AppConfig;
+// use crate::hotkey::HotKeysController;
 use crate::message::pump_windows_messages;
+use crate::server::ServerController;
 use crate::tray::TrayController;
 use crate::vd::{
     change_to_next_virtual_desktop, change_to_prev_virtual_desktop, change_to_virtual_desktop,
@@ -11,6 +12,7 @@ use crate::vd::{
 // Result also allows to use ? for any case.
 // Context allows to define custom error message.
 use anyhow::{Context, Result};
+use fancycore::message_types::Command;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time::Duration};
@@ -21,8 +23,9 @@ static RUNNING: AtomicBool = AtomicBool::new(true);
 
 pub struct App {
     pub config: Arc<AppConfig>,
-    pub hotkeys: HotKeysController,
+    // pub hotkeys: HotKeysController,
     pub tray: TrayController,
+    pub server: ServerController,
 }
 
 impl App {
@@ -31,12 +34,13 @@ impl App {
         // Arc.clone clones only reference and increment counter. Very cheap operation.
         // Arc is perfect to share variable and still have read and write access.
         let config = Arc::new(config);
-        let hotkeys = HotKeysController::new(config.clone())?;
+        // let hotkeys = HotKeysController::new(config.clone())?;
         let tray = TrayController::new()?;
+        let server = ServerController::new()?;
         Ok(Self {
             config,
-            hotkeys,
             tray,
+            server,
         })
     }
 
@@ -48,7 +52,7 @@ impl App {
         })
         .context("Cannot set proper handler")?;
 
-        self.hotkeys.register();
+        // self.hotkeys.register();
 
         println!("Start main loop");
         while RUNNING.load(Ordering::SeqCst) {
@@ -56,7 +60,7 @@ impl App {
                 break;
             }
 
-            if let Some(action) = self.hotkeys.read() {
+            if let Some(action) = self.server.read() {
                 match action.command {
                     Command::MoveToNextVirtualDesktop => {
                         move_active_window_to_next_virtual_desktop()

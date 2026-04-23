@@ -1,13 +1,13 @@
-#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 
 use anyhow::Result;
 use dirs::config_dir;
 
 mod app;
 mod config;
-mod hotkey;
 mod layout;
 mod message;
+mod server;
 mod tray;
 mod vd;
 
