@@ -5,9 +5,9 @@ use dirs::config_dir;
 
 mod app;
 mod config;
+mod ipc;
 mod layout;
 mod message;
-mod server;
 mod tray;
 mod vd;
 

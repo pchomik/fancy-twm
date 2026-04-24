@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
 use anyhow::{Context, Result};
 use image;
 use tray_icon::{
-    menu::{Menu, MenuEvent, MenuItem},
     Icon, TrayIcon, TrayIconBuilder,
+    menu::{Menu, MenuEvent, MenuItem},
 };
 
 pub struct TrayController {

@@ -47,6 +47,7 @@ winvd_win10 = { package = "winvd", version = "0.0.11", optional = true }
 winvd_win11 = { package = "winvd", version = "0.0.48", optional = true }
 rdev = "0.5.3"
 interprocess = "2.4.2"
+recvmsg = "1.0.0"
 serde_json = "1.0.149"
 
 [build-dependencies]
