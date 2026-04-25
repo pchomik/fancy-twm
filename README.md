@@ -69,11 +69,14 @@ Communication based on JSON payload with following format:
 
 The following commands are available:
 
-| Command                    | Args                                                 | Description                                                |
-| -------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| `MoveToNextVirtualDesktop` | -                                                    | Move active window to next virtual desktop                 |
-| `MoveToPrevVirtualDesktop` | -                                                    | Move active window to previous virtual desktop             |
-| `MoveToVirtualDesktop`     | list with single element, index of desktop as string | Move active window to virtual desktop represented by index |
+| Command                      | Args                                                 | Description                                     |
+| ---------------------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| `MoveToNextVirtualDesktop`   | -                                                    | Move active window to next virtual desktop      |
+| `MoveToPrevVirtualDesktop`   | -                                                    | Move active window to previous virtual desktop  |
+| `MoveToVirtualDesktop`       | list with single element, index of desktop as string | Move active window to specified virtual desktop |
+| `SwitchToNextVirtualDesktop` | -                                                    | Switch to next virtual desktop                  |
+| `SwitchToPrevVirtualDesktop` | -                                                    | Switch to previous virtual desktop              |
+| `SwitchToVirtualDesktop`     | list with single element, index of desktop as string | Switch to specified virtual desktop             |
 
 **Important**: Virtual desktops are enumerated from 0.
 
