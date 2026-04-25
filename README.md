@@ -12,10 +12,10 @@ FancyTWM bridges this gap by combining the best of both worlds.
 
 ## Installation and Configuration
 
-### AutoHotkey
+### PowerToys
 
-FancyTWM requires **AutoHotkey v2** to be installed on your system.
-Additionally, the FancyTWM AHK library must be placed in `%USERPROFILE%\Documents\AutoHotkey\Lib` to enable communication with the server.
+A pre-requirement is the installation of [PowerToys](https://learn.microsoft.com/windows/powertoys/).
+Please follow their documentation to install this application and learn about features like `Fancy Zones` and `Keyboard Manager`.
 
 ### Configuration
 
@@ -23,12 +23,59 @@ Copy the example configuration file [example.toml](example/example.toml) to `%AP
 
 ### Binaries
 
-Pre-built binaries are available through GitHub Actions. Download the latest ZIP archive, extract it, and place `fancytwm.exe` in a directory of your choice.
+Pre-built binaries are available through GitHub Actions.
+Download the latest ZIP archive, extract it, and place `fancytwm.exe` and `fancyctl.exe` in a directory of your choice.
+
+Execute both applications before proceeding, as Windows will display a warning about the unknown publisher.
+This warning appears because the binaries are not signed and the application has low usage.
+To use them properly, confirm the exception when prompted.
 
 ### Key Bindings
 
-Finally, configure key bindings for specific actions using an AHK script such as [example.ahk](example/example.ahk).
-Copy this file to `%APPDATA%\FancyTWM\keybindings.ahk` and adjust the bindings to your liking.
+The recommended approach is to configure keys via [Keyboard Manager](https://learn.microsoft.com/en-us/windows/powertoys/keyboard-manager#remap-a-shortcut-to-start-an-app), which uses `fancyctl.exe` via the command line to control certain actions.
+Those are parameters which can be configured:
+
+| Option     | Value                              |
+| ---------- | ---------------------------------- |
+| App        | Path to `fancyctl.exe` application |
+| Args       | Command and all arguments          |
+| Start in   | Default value                      |
+| Elevation  | Normal                             |
+| If running | Do nothing                         |
+| Visibility | Hidden                             |
+
+#### Example
+
+| Option     | Value                       |
+| ---------- | --------------------------- |
+| App        | `C:\Apps\fancyctl.exe`      |
+| Args       | `MoveToVirtualDesktop -i 0` |
+| Start in   | Default value               |
+| Elevation  | Normal                      |
+| If running | Do nothing                  |
+| Visibility | Hidden                      |
+
+## FancyTWM client
+
+Application `fancyctl.exe` is a client that allows communication with `fancytwm.exe` via a named pipe at the path `\\.\pipe\fancytwm-pipe`.
+Communication based on JSON payload with following format:
+
+```json
+{
+    "command": "string",
+    "args": ["string"]
+}
+```
+
+The following commands are available:
+
+| Command                    | Args                                                 | Description                                                |
+| -------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
+| `MoveToNextVirtualDesktop` | -                                                    | Move active window to next virtual desktop                 |
+| `MoveToPrevVirtualDesktop` | -                                                    | Move active window to previous virtual desktop             |
+| `MoveToVirtualDesktop`     | list with single element, index of desktop as string | Move active window to virtual desktop represented by index |
+
+**Important**: Virtual desktops are enumerated from 0.
 
 ## Features
 
@@ -57,14 +104,11 @@ Three tiling layouts are available:
 - [x] Layouts
 - [x] Virtual desktop management
 - [x] FancyTWM server
-- [x] AHK library
-- [x] AHK configuration
-- [ ] Start keybindings.ahk if available
+- [x] FancyTWM client
 - [ ] Tagging logic
 - [ ] Move within monitor logic
 - [ ] Move across monitors logic
 - [ ] New window tagging (if needed)
-- [ ] FancyTWM client (fancyctl) ???
 
 ## Limitations
 
