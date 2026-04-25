@@ -47,7 +47,7 @@ pub fn move_active_window_to_virtual_desktop(target_index: &String) {
 }
 
 #[cfg(feature = "windows10")]
-pub fn change_to_next_virtual_desktop() {
+pub fn switch_to_next_virtual_desktop() {
     if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
         if let Some(current_index) = desktops.iter().position(|d| d == &current) {
             if current_index < desktops.len() - 1 {
@@ -59,7 +59,7 @@ pub fn change_to_next_virtual_desktop() {
 }
 
 #[cfg(feature = "windows10")]
-pub fn change_to_prev_virtual_desktop() {
+pub fn switch_to_prev_virtual_desktop() {
     if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
         if let Some(current_index) = desktops.iter().position(|d| d == &current) {
             if current_index > 0 {
@@ -71,7 +71,7 @@ pub fn change_to_prev_virtual_desktop() {
 }
 
 #[cfg(feature = "windows10")]
-pub fn change_to_virtual_desktop(target_index: &String) {
+pub fn switch_to_virtual_desktop(target_index: &String) {
     if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
         if let Some(current_index) = desktops.iter().position(|d| d == &current) {
             if let Ok(target_index) = target_index.parse::<usize>() {
@@ -155,7 +155,7 @@ pub fn move_active_window_to_prev_virtual_desktop() {
 }
 
 #[cfg(feature = "windows11")]
-pub fn change_to_next_virtual_desktop() {
+pub fn switch_to_next_virtual_desktop() {
     if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
         if let Some(current_index) = desktops.iter().position(|d| d == &current) {
             if current_index < desktops.len() - 1 {
@@ -167,7 +167,7 @@ pub fn change_to_next_virtual_desktop() {
 }
 
 #[cfg(feature = "windows11")]
-pub fn change_to_prev_virtual_desktop() {
+pub fn switch_to_prev_virtual_desktop() {
     if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
         if let Some(current_index) = desktops.iter().position(|d| d == &current) {
             if current_index > 0 {
@@ -179,7 +179,7 @@ pub fn change_to_prev_virtual_desktop() {
 }
 
 #[cfg(feature = "windows11")]
-pub fn change_to_virtual_desktop(target_index: &String) {
+pub fn switch_to_virtual_desktop(target_index: &String) {
     if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
         if let Some(current_index) = desktops.iter().position(|d| d == &current) {
             if let Ok(target_index) = target_index.parse::<usize>() {

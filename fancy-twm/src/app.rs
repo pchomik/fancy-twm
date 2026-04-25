@@ -4,9 +4,9 @@ use crate::ipc::IpcServerController;
 use crate::message::pump_windows_messages;
 use crate::tray::TrayController;
 use crate::vd::{
-    change_to_next_virtual_desktop, change_to_prev_virtual_desktop, change_to_virtual_desktop,
     move_active_window_to_next_virtual_desktop, move_active_window_to_prev_virtual_desktop,
-    move_active_window_to_virtual_desktop,
+    move_active_window_to_virtual_desktop, switch_to_next_virtual_desktop,
+    switch_to_prev_virtual_desktop, switch_to_virtual_desktop,
 };
 // Result allows to return any Error without changing signature.
 // Result also allows to use ? for any case.
@@ -73,15 +73,15 @@ impl App {
                             move_active_window_to_virtual_desktop(&args[0]);
                         }
                     }
-                    Command::ChangeToNextVirtualDesktop => {
-                        change_to_next_virtual_desktop();
+                    Command::SwitchToNextVirtualDesktop => {
+                        switch_to_next_virtual_desktop();
                     }
-                    Command::ChangeToPrevVirtualDesktop => {
-                        change_to_prev_virtual_desktop();
+                    Command::SwitchToPrevVirtualDesktop => {
+                        switch_to_prev_virtual_desktop();
                     }
-                    Command::ChangeToVirtualDesktop => {
+                    Command::SwitchToVirtualDesktop => {
                         if let Some(args) = action.args {
-                            change_to_virtual_desktop(&args[0]);
+                            switch_to_virtual_desktop(&args[0]);
                         }
                     }
                 }
