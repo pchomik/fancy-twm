@@ -16,9 +16,8 @@ struct CompiledIgnoreRule {
 
 /// Tracks the set of tileable windows on the current virtual desktop.
 ///
-/// Windows are kept in a stable order that reflects their tiling position.
-/// New windows are appended at the end; the tiling engine is responsible for
-/// the "new window takes first area, others shift" semantics by reordering.
+/// Windows are kept in stable discovery order. New windows are appended; the
+/// tiling engine keeps their area assignments separately.
 pub struct WindowTracker {
     /// Ordered list of currently tracked windows.
     windows: Vec<HWND>,
@@ -226,16 +225,5 @@ impl WindowTracker {
     /// Returns the current ordered list of tracked windows.
     pub fn windows(&self) -> &[HWND] {
         &self.windows
-    }
-
-    /// Replaces the tracked window order (used by the tiling engine to
-    /// persist its computed ordering).
-    pub fn set_order(&mut self, windows: Vec<HWND>) {
-        self.windows = windows;
-    }
-
-    /// Drops a specific window from tracking and returns whether it changed.
-    pub fn contains(&self, hwnd: HWND) -> bool {
-        self.windows.contains(&hwnd)
     }
 }

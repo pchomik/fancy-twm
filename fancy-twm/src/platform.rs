@@ -29,17 +29,17 @@ use windows_win11::core::PWSTR;
 use windows_win10::Win32::UI::WindowsAndMessaging::{
     DispatchMessageW, EnumWindows, GWL_EXSTYLE, GWL_STYLE, GetForegroundWindow, GetMessageW,
     GetParent, GetWindowLongW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW,
-    GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, MSG, PM_REMOVE, PeekMessageW,
-    SWP_NOACTIVATE, SWP_NOSENDCHANGING, SWP_NOZORDER, SetWindowPos, TranslateMessage, WM_QUIT,
-    WS_EX_TOOLWINDOW, WS_THICKFRAME,
+    GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, IsZoomed, MSG, PM_REMOVE,
+    PeekMessageW, SWP_NOACTIVATE, SWP_NOSENDCHANGING, SWP_NOZORDER, SetWindowPos, TranslateMessage,
+    WM_QUIT, WS_EX_TOOLWINDOW, WS_THICKFRAME,
 };
 #[cfg(feature = "windows11")]
 use windows_win11::Win32::UI::WindowsAndMessaging::{
     DispatchMessageW, EnumWindows, GWL_EXSTYLE, GWL_STYLE, GetForegroundWindow, GetMessageW,
     GetParent, GetWindowLongW, GetWindowRect, GetWindowTextLengthW, GetWindowTextW,
-    GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, MSG, PM_REMOVE, PeekMessageW,
-    SWP_NOACTIVATE, SWP_NOSENDCHANGING, SWP_NOZORDER, SetWindowPos, TranslateMessage, WM_QUIT,
-    WS_EX_TOOLWINDOW, WS_THICKFRAME,
+    GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, IsZoomed, MSG, PM_REMOVE,
+    PeekMessageW, SWP_NOACTIVATE, SWP_NOSENDCHANGING, SWP_NOZORDER, SetWindowPos, TranslateMessage,
+    WM_QUIT, WS_EX_TOOLWINDOW, WS_THICKFRAME,
 };
 
 // ── GDI / Monitor APIs ───────────────────────────────────────────────
@@ -55,12 +55,13 @@ use windows_win10::Win32::UI::HiDpi::{
 };
 #[cfg(feature = "windows11")]
 use windows_win11::Win32::Graphics::Gdi::{
-    EnumDisplayMonitors, GetDpiForMonitor, GetMonitorInfoW, HDC, HMONITOR, MDT_EFFECTIVE_DPI,
-    MONITOR_DEFAULTTONEAREST, MONITORINFO, MONITORINFOEXW, MonitorFromWindow,
+    EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITOR_DEFAULTTONEAREST, MONITORINFO,
+    MONITORINFOEXW, MonitorFromWindow,
 };
 #[cfg(feature = "windows11")]
 use windows_win11::Win32::UI::HiDpi::{
-    DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SetProcessDpiAwarenessContext,
+    DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, GetDpiForMonitor, MDT_EFFECTIVE_DPI,
+    SetProcessDpiAwarenessContext,
 };
 
 // ── COM for IVirtualDesktopManager ───────────────────────────────────
@@ -627,6 +628,25 @@ pub fn is_window_minimized(hwnd: HWND) -> bool {
     unsafe { IsIconic(hwnd).as_bool() }
 }
 
+/// Whether tiling must preserve the window's current geometry.
+///
+/// Windows exposes maximized state directly. Borderless fullscreen windows
+/// are detected by matching their outer rectangle to the full monitor area.
+pub fn is_window_maximized_or_fullscreen(hwnd: HWND) -> bool {
+    if unsafe { IsZoomed(hwnd).as_bool() } {
+        return true;
+    }
+
+    let Some(window_rect) = get_window_rect(hwnd) else {
+        return false;
+    };
+    let Some(monitor) = get_monitor_for_window(hwnd) else {
+        return false;
+    };
+
+    window_rect == monitor.rect
+}
+
 /// Whether the window still exists.
 pub fn is_window(hwnd: HWND) -> bool {
     unsafe { IsWindow(hwnd).as_bool() }
@@ -635,7 +655,7 @@ pub fn is_window(hwnd: HWND) -> bool {
 /// Whether a window should be considered for tiling.
 ///
 /// A tileable window is visible, not minimized, has no owner, is not a
-/// tool window, and is resizable (`WS_THICKFRAME`).
+/// tool window, and is resizable (`WS_THICKFRAME`), maximized, or fullscreen.
 pub fn is_window_tileable(hwnd: HWND) -> bool {
     unsafe {
         if !IsWindowVisible(hwnd).as_bool() {
@@ -662,9 +682,10 @@ pub fn is_window_tileable(hwnd: HWND) -> bool {
         if ex_style & WS_EX_TOOLWINDOW.0 != 0 {
             return false;
         }
-        // Only resizable windows are tiled.
+        // Keep maximized and borderless fullscreen windows tracked even when
+        // they temporarily lack the normal resizable-window style.
         let style = GetWindowLongW(hwnd, GWL_STYLE) as u32;
-        style & WS_THICKFRAME.0 != 0
+        style & WS_THICKFRAME.0 != 0 || is_window_maximized_or_fullscreen(hwnd)
     }
 }
 

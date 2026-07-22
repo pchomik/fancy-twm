@@ -12,6 +12,7 @@ mod log;
 mod platform;
 mod position;
 mod tiling;
+mod tiling_state;
 mod tracker;
 mod tray;
 mod vd;

@@ -2,7 +2,7 @@
 
 FancyTWM is a tiling window manager for Windows with first-class virtual
 desktop support. It arranges your windows into configurable grid-based layouts
-(Monocle, Columns, Rows), tracks windows across monitors and virtual desktops,
+(Monocle, Columns, Rows, Grid), tracks windows across monitors and virtual desktops,
 and keeps everything in place automatically.
 
 ## Motivation
@@ -15,7 +15,7 @@ open, close, minimize, or move them — all while preserving window z-order.
 ## How it works
 
 FancyTWM reads a **grid** definition (rows × columns) from its configuration and
-lays it over each monitor's work area. A **layout** (Monocle, Columns, or Rows)
+lays it over each monitor's work area. A **layout** (Monocle, Columns, Rows, or Grid)
 selects which grid cells belong to each *area*. A separate position calculator
 turns those cells into concrete pixel rectangles, applying the configured gap.
 
@@ -23,8 +23,8 @@ turns those cells into concrete pixel rectangles, applying the configured gap.
   Windows already in the last area stay put.
 - **Minimized windows** are treated as untracked — remaining windows shift back
   toward the first area.
-- **The last area is tabbed**: when more windows occupy it than there are areas,
-  only one is visible and you cycle through them with the stack commands.
+- **The last area is stacked**: extra windows share its rectangle. Windows controls
+  the z-order; FancyTWM never hides, activates, or reorders stacked windows.
 - Window positions are verified periodically and corrected if they drift.
 - Window movement never changes the z-order (`SWP_NOZORDER`).
 
@@ -111,17 +111,10 @@ The `fancyctl.exe` client communicates with `fancytwm.exe` via a named pipe at
 
 | Command           | Args | Description                                                        |
 | ----------------- | ---- | ------------------------------------------------------------------ |
-| `MoveWindowRight` | -    | Move the focused window one area right (crosses monitors)          |
-| `MoveWindowLeft`  | -    | Move the focused window one area left (crosses monitors)           |
-| `MoveWindowUp`    | -    | Move the focused window one area up (Rows layout only)             |
-| `MoveWindowDown`  | -    | Move the focused window one area down (Rows layout only)           |
-
-#### Tabbed stacking
-
-| Command          | Args | Description                                            |
-| ---------------- | ---- | ------------------------------------------------------ |
-| `CycleStackNext` | -    | Show the next window in the last-area tab stack        |
-| `CycleStackPrev` | -    | Show the previous window in the last-area tab stack    |
+| `MoveWindowRight` | -    | Move right in Columns/Grid, crossing at edge; change monitor in Monocle/Rows |
+| `MoveWindowLeft`  | -    | Move left in Columns/Grid, crossing at edge; change monitor in Monocle/Rows  |
+| `MoveWindowUp`    | -    | Move up in Rows/Grid                                               |
+| `MoveWindowDown`  | -    | Move down in Rows/Grid                                             |
 
 ### `fancyctl` subcommands
 
@@ -140,8 +133,6 @@ fancyctl move-right
 fancyctl move-left
 fancyctl move-up
 fancyctl move-down
-fancyctl stack-next
-fancyctl stack-prev
 ```
 
 ## Features
@@ -150,9 +141,10 @@ fancyctl stack-prev
 
 | Layout      | Description                                                                                     |
 | ----------- | ----------------------------------------------------------------------------------------------- |
-| **Monocle** | A single area covering the whole grid; all windows are tabbed, only the focused one is visible  |
-| **Columns** | Up to `max_columns` vertical areas; extra windows tab in the last column                        |
-| **Rows**    | Up to `max_rows` horizontal areas; extra windows tab in the last row                            |
+| **Monocle** | A single work-area-sized stack; Windows controls z-order                                       |
+| **Columns** | Up to `max_columns` vertical areas; extra windows stack in the last column                     |
+| **Rows**    | Up to `max_rows` horizontal areas; extra windows stack in the last row                         |
+| **Grid**    | One area per grid cell in row-major order; extra windows stack in the last cell                |
 
 ### Window tracking
 
@@ -190,7 +182,7 @@ title = "Settings"         # regex on window title
 [[virtual_desktops]]
 name = "1"
   [[virtual_desktops.monitors]]   # one entry per monitor, left to right
-  layout = "Columns"              # Monocle | Columns | Rows
+  layout = "Columns"              # Monocle | Columns | Rows | Grid
   max_columns = 3                 # for Columns
   max_rows = 2                    # for Rows
 ```
@@ -211,9 +203,9 @@ name = "1"
 | `vd`         | Virtual desktop navigation operations                                 |
 | `tracker`    | Window tracking (WinEvent hooks + periodic scan) and ignore rules     |
 | `grid`       | Grid model and single-cell geometry                                   |
-| `layout`     | Monocle/Columns/Rows layouts selecting grid cells per area            |
+| `layout`     | Monocle/Columns/Rows/Grid layouts selecting grid cells per area       |
 | `position`   | Converts selected cells into pixel rectangles                         |
-| `tiling`     | Tiling engine: assignment, shift logic, tab stacking, position check  |
+| `tiling`     | Tiling engine: assignment, shift logic, terminal stacking, position check |
 | `config`     | Configuration schema                                                  |
 | `ipc`        | Named pipe server                                                     |
 | `tray`       | System tray icon                                                      |
