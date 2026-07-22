@@ -1,15 +1,73 @@
+# FancyTWM configuration example.
+# Copy this file to %APPDATA%\FancyTWM\config.toml and customize.
+
+# ── Layout cycling ────────────────────────────────────────────────────
+# Order in which layouts are cycled when using the cycle-layout command.
+# Available layout names: Monocle, Columns, Rows, Grid
+cycle_order = ["Monocle", "Columns", "Rows", "Grid"]
+
+# ── Global grid ───────────────────────────────────────────────────────
+# The grid of cells laid over each monitor's work area. Layouts select
+# cells from this grid; FancyTWM computes the pixel rectangles.
+[grid]
+rows = 4
+columns = 4
+gap = 8     # pixels between cells and around the work area edges
+
+# ── Periodic window scan ──────────────────────────────────────────────
+# Complements the WinEvent hook by periodically re-scanning windows.
+[scan]
+enabled = true
+interval_ms = 1000
+
+# ── Periodic position check ───────────────────────────────────────────
+# Verifies window positions and corrects any that drifted.
+[periodic_check]
+enabled = true
+interval_ms = 1000
+tolerance = 5      # allowed pixel deviation before correcting
+
+# ── Ignore rules ──────────────────────────────────────────────────────
+# Windows matching ANY specified field (regex) are not tracked/tiled.
+# Both `process` and `title` are regular expressions.
+[[ignore]]
+process = "explorer.exe"
+
+[[ignore]]
+title = "Settings"
+
+# ── Virtual desktops ──────────────────────────────────────────────────
+# One layout per monitor per virtual desktop. Monitors are referenced by
+# position (index) from left to right. Available layouts:
+#   Monocle            – single area, all windows tabbed
+#   Columns            – vertical columns (set max_columns)
+#   Rows               – horizontal rows (set max_rows)
 [[virtual_desktops]]
 name = "1"
-workspaces = [{ layout = "Columns" }, { layout = "Monocle" }]
+[[virtual_desktops.monitors]]
+layout = "Columns"
+max_columns = 3
+[[virtual_desktops.monitors]]
+layout = "Monocle"
 
 [[virtual_desktops]]
 name = "2"
-workspaces = [{ layout = "Monocle" }, { layout = "Monocle" }]
+[[virtual_desktops.monitors]]
+layout = "Rows"
+max_rows = 2
+[[virtual_desktops.monitors]]
+layout = "Monocle"
 
 [[virtual_desktops]]
 name = "3"
-workspaces = [{ layout = "Monocle" }, { layout = "Monocle" }]
+[[virtual_desktops.monitors]]
+layout = "Monocle"
+[[virtual_desktops.monitors]]
+layout = "Monocle"
 
 [[virtual_desktops]]
 name = "4"
-workspaces = [{ layout = "Monocle" }, { layout = "Monocle" }]
+[[virtual_desktops.monitors]]
+layout = "Monocle"
+[[virtual_desktops.monitors]]
+layout = "Monocle"

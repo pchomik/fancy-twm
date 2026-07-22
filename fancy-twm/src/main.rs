@@ -5,13 +5,27 @@ use dirs::config_dir;
 
 mod app;
 mod config;
+mod grid;
 mod ipc;
 mod layout;
-mod message;
+mod log;
+mod platform;
+mod position;
+mod tiling;
+mod tracker;
 mod tray;
 mod vd;
 
 fn main() -> Result<()> {
+    // Optional file logging (set FANCYTWM_LOG=1 to enable). Must be called
+    // before any logging happens.
+    log::init();
+
+    // Must be called before any window is created or positioned. Prevents
+    // Windows from rescaling windows when they cross monitor DPI boundaries,
+    // eliminating the visible double-resize during cross-monitor moves.
+    platform::set_process_dpi_awareness();
+
     let config_path = config_dir()
         .map(|p| p.join("FancyTWM").join("config.toml"))
         .unwrap();

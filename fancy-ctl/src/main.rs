@@ -34,6 +34,30 @@ enum Commands {
         #[arg(short, long)]
         idx: String,
     },
+
+    /// Recompute and apply tiling for the active monitor
+    RetileMonitor,
+    /// Recompute and apply tiling for all monitors on the current virtual desktop
+    RetileVd,
+
+    /// Move the focused window one area to the right (crosses monitors)
+    MoveRight,
+    /// Move the focused window one area to the left (crosses monitors)
+    MoveLeft,
+    /// Move the focused window one area up (Rows layout only)
+    MoveUp,
+    /// Move the focused window one area down (Rows layout only)
+    MoveDown,
+
+    /// Cycle the layout of the monitor containing the focused window
+    CycleLayout,
+
+    /// Set a specific layout for the monitor containing the focused window
+    SetLayout {
+        /// Layout name: Monocle, Columns, Rows, or Grid (case-insensitive)
+        #[arg(short, long)]
+        layout: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -79,6 +103,64 @@ fn main() -> Result<()> {
             let msg = message::PipeMessage {
                 command: message::Command::SwitchToVirtualDesktop,
                 args: Some(vec![idx.clone()]),
+            };
+            IpcClient::send(msg)?;
+        }
+
+        Commands::RetileMonitor => {
+            let msg = message::PipeMessage {
+                command: message::Command::RetileActiveMonitor,
+                args: None,
+            };
+            IpcClient::send(msg)?;
+        }
+        Commands::RetileVd => {
+            let msg = message::PipeMessage {
+                command: message::Command::RetileVirtualDesktop,
+                args: None,
+            };
+            IpcClient::send(msg)?;
+        }
+
+        Commands::MoveRight => {
+            let msg = message::PipeMessage {
+                command: message::Command::MoveWindowRight,
+                args: None,
+            };
+            IpcClient::send(msg)?;
+        }
+        Commands::MoveLeft => {
+            let msg = message::PipeMessage {
+                command: message::Command::MoveWindowLeft,
+                args: None,
+            };
+            IpcClient::send(msg)?;
+        }
+        Commands::MoveUp => {
+            let msg = message::PipeMessage {
+                command: message::Command::MoveWindowUp,
+                args: None,
+            };
+            IpcClient::send(msg)?;
+        }
+        Commands::MoveDown => {
+            let msg = message::PipeMessage {
+                command: message::Command::MoveWindowDown,
+                args: None,
+            };
+            IpcClient::send(msg)?;
+        }
+        Commands::CycleLayout => {
+            let msg = message::PipeMessage {
+                command: message::Command::CycleLayout,
+                args: None,
+            };
+            IpcClient::send(msg)?;
+        }
+        Commands::SetLayout { layout } => {
+            let msg = message::PipeMessage {
+                command: message::Command::SetLayout,
+                args: Some(vec![layout.clone()]),
             };
             IpcClient::send(msg)?;
         }

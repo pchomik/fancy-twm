@@ -1,192 +1,73 @@
-#[cfg(feature = "windows10")]
-use windows_win10::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+//! Virtual desktop operations — thin wrappers over [`crate::platform`].
+//!
+//! All platform-specific details (Win10 vs Win11 API differences) are
+//! handled inside `platform.rs`; this module contains only the
+//! user-facing desktop navigation logic.
 
-#[cfg(feature = "windows11")]
-use windows_win11::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+use crate::platform;
 
-#[cfg(feature = "windows10")]
-use winvd_win10::{get_current_desktop, get_desktops, go_to_desktop, move_window_to_desktop};
-
-#[cfg(feature = "windows11")]
-use winvd_win11::{get_current_desktop, get_desktops, move_window_to_desktop, switch_desktop};
-
-#[cfg(feature = "windows10")]
+/// Moves the foreground window to the next virtual desktop (if one exists).
 pub fn move_active_window_to_next_virtual_desktop() {
-    unsafe {
-        let hwnd = GetForegroundWindow();
-        if hwnd.0 != 0 {
-            if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-                if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-                    if current_index < desktops.len() - 1 {
-                        let next_desktop = &desktops[current_index + 1];
-                        let _ = move_window_to_desktop(hwnd.0 as u32, next_desktop);
-                    }
-                }
-            }
+    let Some(hwnd) = platform::get_foreground_window() else {
+        return;
+    };
+    if let Ok((count, current)) = platform::get_desktop_info() {
+        if current + 1 < count {
+            let _ = platform::move_window_to_desktop_by_index(hwnd, current + 1);
         }
     }
 }
 
-#[cfg(feature = "windows10")]
-pub fn move_active_window_to_virtual_desktop(target_index: &String) {
-    unsafe {
-        let hwnd = GetForegroundWindow();
-        if hwnd.0 != 0 {
-            if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-                if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-                    if let Ok(target_index) = target_index.parse::<usize>() {
-                        if target_index != current_index && target_index < desktops.len() {
-                            let target_desktop = &desktops[target_index];
-                            let _ = move_window_to_desktop(hwnd.0 as u32, target_desktop);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[cfg(feature = "windows10")]
-pub fn switch_to_next_virtual_desktop() {
-    if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-        if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-            if current_index < desktops.len() - 1 {
-                let next_desktop = &desktops[current_index + 1];
-                let _ = go_to_desktop(next_desktop);
-            }
-        }
-    }
-}
-
-#[cfg(feature = "windows10")]
-pub fn switch_to_prev_virtual_desktop() {
-    if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-        if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-            if current_index > 0 {
-                let next_desktop = &desktops[current_index - 1];
-                let _ = go_to_desktop(next_desktop);
-            }
-        }
-    }
-}
-
-#[cfg(feature = "windows10")]
-pub fn switch_to_virtual_desktop(target_index: &String) {
-    if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-        if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-            if let Ok(target_index) = target_index.parse::<usize>() {
-                if target_index != current_index && target_index < desktops.len() {
-                    let next_desktop = &desktops[target_index];
-                    let _ = go_to_desktop(next_desktop);
-                }
-            }
-        }
-    }
-}
-
-#[cfg(feature = "windows11")]
-pub fn move_active_window_to_next_virtual_desktop() {
-    unsafe {
-        let hwnd = GetForegroundWindow();
-        if !hwnd.is_invalid() {
-            if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-                if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-                    if current_index < desktops.len() - 1 {
-                        let next_desktop = &desktops[current_index + 1];
-                        let _ = move_window_to_desktop(next_desktop.clone(), &hwnd);
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[cfg(feature = "windows11")]
-pub fn move_active_window_to_virtual_desktop(target_index: &String) {
-    unsafe {
-        let hwnd = GetForegroundWindow();
-        if !hwnd.is_invalid() {
-            if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-                if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-                    if let Ok(target_index) = target_index.parse::<usize>() {
-                        if target_index != current_index && target_index < desktops.len() {
-                            let target_desktop = &desktops[target_index];
-                            let _ = move_window_to_desktop(target_desktop.clone(), &hwnd);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[cfg(feature = "windows10")]
+/// Moves the foreground window to the previous virtual desktop (if one exists).
 pub fn move_active_window_to_prev_virtual_desktop() {
-    unsafe {
-        let hwnd = GetForegroundWindow();
-        if hwnd.0 != 0 {
-            if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-                if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-                    if current_index > 0 {
-                        let prev_desktop = &desktops[current_index - 1];
-                        let _ = move_window_to_desktop(hwnd.0 as u32, prev_desktop);
-                    }
-                }
+    let Some(hwnd) = platform::get_foreground_window() else {
+        return;
+    };
+    if let Ok((_, current)) = platform::get_desktop_info() {
+        if current > 0 {
+            let _ = platform::move_window_to_desktop_by_index(hwnd, current - 1);
+        }
+    }
+}
+
+/// Moves the foreground window to the virtual desktop at `target_index`.
+pub fn move_active_window_to_virtual_desktop(target_index: &str) {
+    let Some(hwnd) = platform::get_foreground_window() else {
+        return;
+    };
+    if let Ok(target) = target_index.parse::<usize>() {
+        if let Ok((count, current)) = platform::get_desktop_info() {
+            if target != current && target < count {
+                let _ = platform::move_window_to_desktop_by_index(hwnd, target);
             }
         }
     }
 }
 
-#[cfg(feature = "windows11")]
-pub fn move_active_window_to_prev_virtual_desktop() {
-    unsafe {
-        let hwnd = GetForegroundWindow();
-        if !hwnd.is_invalid() {
-            if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-                if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-                    if current_index > 0 {
-                        let prev_desktop = &desktops[current_index - 1];
-                        let _ = move_window_to_desktop(prev_desktop.clone(), &hwnd);
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[cfg(feature = "windows11")]
+/// Switches the view to the next virtual desktop.
 pub fn switch_to_next_virtual_desktop() {
-    if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-        if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-            if current_index < desktops.len() - 1 {
-                let next_desktop = &desktops[current_index + 1];
-                let _ = switch_desktop(next_desktop.clone());
-            }
+    if let Ok((count, current)) = platform::get_desktop_info() {
+        if current + 1 < count {
+            let _ = platform::switch_to_desktop_by_index(current + 1);
         }
     }
 }
 
-#[cfg(feature = "windows11")]
+/// Switches the view to the previous virtual desktop.
 pub fn switch_to_prev_virtual_desktop() {
-    if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-        if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-            if current_index > 0 {
-                let next_desktop = &desktops[current_index - 1];
-                let _ = switch_desktop(next_desktop.clone());
-            }
+    if let Ok((_, current)) = platform::get_desktop_info() {
+        if current > 0 {
+            let _ = platform::switch_to_desktop_by_index(current - 1);
         }
     }
 }
 
-#[cfg(feature = "windows11")]
-pub fn switch_to_virtual_desktop(target_index: &String) {
-    if let (Ok(desktops), Ok(current)) = (get_desktops(), get_current_desktop()) {
-        if let Some(current_index) = desktops.iter().position(|d| d == &current) {
-            if let Ok(target_index) = target_index.parse::<usize>() {
-                if target_index != current_index && target_index < desktops.len() {
-                    let next_desktop = &desktops[target_index];
-                    let _ = switch_desktop(next_desktop.clone());
-                }
+/// Switches the view to the virtual desktop at `target_index`.
+pub fn switch_to_virtual_desktop(target_index: &str) {
+    if let Ok(target) = target_index.parse::<usize>() {
+        if let Ok((count, current)) = platform::get_desktop_info() {
+            if target != current && target < count {
+                let _ = platform::switch_to_desktop_by_index(target);
             }
         }
     }
