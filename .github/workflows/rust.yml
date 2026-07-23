@@ -6,38 +6,27 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-win10:
-
+  build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        feature: [windows10, windows11]
 
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: cargo build --release --no-default-features --features windows10
+      run: cargo build --release --no-default-features --features ${{ matrix.feature }}
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tilosrv-win10
-        path: |
-          target/release/tilosrv.exe
-          target/release/tiloctl.exe
-
-  build-win11:
-
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --release --no-default-features --features windows11
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: tilosrv-win11
+        name: tilosrv-${{ matrix.feature }}
         path: |
           target/release/tilosrv.exe
           target/release/tiloctl.exe
