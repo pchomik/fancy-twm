@@ -29,8 +29,16 @@ into pixel rectangles with the configured gap.
 
 ### Binaries
 
-Pre-built binaries are available through GitHub Actions. Download the latest
-ZIP archive and extract `tilosrv.exe` and `tiloctl.exe` to a directory of your
+Pre-built binaries are available as ZIP archives from two places:
+
+- **Releases** — download the attached ZIP files from the latest
+  [release tag](https://github.com/pchomik/tilo/releases).
+- **Actions** — download build artifacts from the
+  [Actions](https://github.com/pchomik/tilo/actions) tab for any
+  branch or pull request.
+
+Each archive contains `tilosrv.exe` and `tiloctl.exe` for one Windows version
+(`windows10` or `windows11`). Extract both executables to a directory of your
 choice, for example `C:\Apps\tilo\`.
 
 Run `tilosrv.exe` to start the tiling service. It runs in the background with
