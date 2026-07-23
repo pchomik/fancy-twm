@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
-use fancycore::message::PipeMessage;
 use interprocess::os::windows::named_pipe::{DuplexPipeStream, pipe_mode};
+use tilo_core::message::PipeMessage;
 
-const PIPE_NAME: &str = r"\\.\pipe\fancytwm-pipe";
+const PIPE_NAME: &str = r"\\.\pipe\tilosrv-pipe";
 
 pub struct IpcClient {}
 

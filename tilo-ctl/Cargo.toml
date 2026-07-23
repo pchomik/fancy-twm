@@ -1,10 +1,10 @@
 [package]
-name = "fancyctl"
+name = "tiloctl"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-fancycore = { path = "../fancy-core" }
+tilo-core = { path = "../tilo-core" }
 clap = { version = "=4.6.0", features = ["cargo", "derive"] }
 anyhow = "1.0.102"
 interprocess = "2.4.2"

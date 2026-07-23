@@ -1,7 +1,7 @@
 use crate::ipc::IpcClient;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use fancycore::message;
+use tilo_core::message;
 
 pub mod ipc;
 

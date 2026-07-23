@@ -1,7 +1,7 @@
 //! Minimal file logger for diagnosing tiling/tag logic.
 //!
-//! Writes timestamped lines to `%APPDATA%\FancyTWM\fancytwm.log`.
-//! Enabled via the `FANCYTWM_LOG` environment variable (set to `1`).
+//! Writes timestamped lines to `%USERPROFILE%\.config\tilo\tilosrv.log`.
+//! Enabled via the `TILOSRV_LOG` environment variable (set to `1`).
 //! When disabled, all logging calls are effectively no-ops (cheap check).
 
 use std::fs::OpenOptions;
@@ -14,15 +14,15 @@ static LOG_PATH: OnceLock<std::path::PathBuf> = OnceLock::new();
 
 /// Initializes the logger. Call once at startup.
 pub fn init() {
-    let enabled = std::env::var("FANCYTWM_LOG")
+    let enabled = std::env::var("TILOSRV_LOG")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     ENABLED.store(enabled, Ordering::Relaxed);
 
     if enabled {
-        if let Some(dir) = dirs::config_dir().map(|p| p.join("FancyTWM")) {
+        if let Some(dir) = dirs::home_dir().map(|p| p.join(".config").join("tilo")) {
             let _ = std::fs::create_dir_all(&dir);
-            let path = dir.join("fancytwm.log");
+            let path = dir.join("tilosrv.log");
             // Truncate on start so each run gets a fresh log.
             let _ = std::fs::write(&path, "");
             let _ = LOG_PATH.set(path);

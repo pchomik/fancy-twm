@@ -1,5 +1,5 @@
 [package]
-name = "fancycore"
+name = "tilo-core"
 version = "0.1.0"
 edition = "2024"
 

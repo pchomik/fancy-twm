@@ -1,12 +1,12 @@
 use anyhow::{Context, Result};
-use fancycore::message::PipeMessage;
+use tilo_core::message::PipeMessage;
 use interprocess::os::windows::named_pipe::{
     DuplexPipeStream, PipeListenerOptions, PipeMode, pipe_mode,
 };
 use recvmsg::{MsgBuf, sync::RecvMsg};
 use std::{path::Path, sync::mpsc, thread};
 
-const PIPE_NAME: &str = r"\\.\pipe\fancytwm-pipe";
+const PIPE_NAME: &str = r"\\.\pipe\tilosrv-pipe";
 
 pub struct IpcServerController {
     receiver: mpsc::Receiver<PipeMessage>,

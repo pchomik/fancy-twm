@@ -1,5 +1,5 @@
-# FancyTWM configuration example.
-# Copy this file to %APPDATA%\FancyTWM\config.toml and customize.
+# Tilo configuration example.
+# Copy this file to %USERPROFILE%\.config\tilo\config.toml and customize.
 
 # ── Layout cycling ────────────────────────────────────────────────────
 # Order in which layouts are cycled when using the cycle-layout command.
@@ -8,7 +8,7 @@ cycle_order = ["Monocle", "Columns", "Rows", "Grid"]
 
 # ── Global grid ───────────────────────────────────────────────────────
 # The grid of cells laid over each monitor's work area. Layouts select
-# cells from this grid; FancyTWM computes the pixel rectangles.
+# cells from this grid; Tilo computes the pixel rectangles.
 [grid]
 rows = 4
 columns = 4

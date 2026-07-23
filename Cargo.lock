@@ -580,48 +580,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fancycore"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "fancyctl"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "fancycore",
- "interprocess",
- "serde_json",
-]
-
-[[package]]
-name = "fancytwm"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "ctrlc",
- "dirs",
- "fancycore",
- "image",
- "interprocess",
- "png 0.18.1",
- "recvmsg",
- "regex",
- "serde",
- "serde_json",
- "toml 1.1.2+spec-1.1.0",
- "tray-icon",
- "windows 0.44.0",
- "windows 0.58.0",
- "winres",
- "winvd 0.0.11",
- "winvd 0.0.48",
-]
-
-[[package]]
 name = "fax"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2042,6 +2000,48 @@ dependencies = [
  "quick-error",
  "weezl",
  "zune-jpeg",
+]
+
+[[package]]
+name = "tilo-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "tiloctl"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "interprocess",
+ "serde_json",
+ "tilo-core",
+]
+
+[[package]]
+name = "tilosrv"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ctrlc",
+ "dirs",
+ "image",
+ "interprocess",
+ "png 0.18.1",
+ "recvmsg",
+ "regex",
+ "serde",
+ "serde_json",
+ "tilo-core",
+ "toml 1.1.2+spec-1.1.0",
+ "tray-icon",
+ "windows 0.44.0",
+ "windows 0.58.0",
+ "winres",
+ "winvd 0.0.11",
+ "winvd 0.0.48",
 ]
 
 [[package]]

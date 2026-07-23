@@ -847,7 +847,7 @@ pub fn start_window_event_listener() -> Result<mpsc::Receiver<WindowEvent>> {
         .map_err(|_| anyhow::anyhow!("Window event listener already started"))?;
 
     std::thread::Builder::new()
-        .name("fancytwm-winevent".to_string())
+        .name("tilosrv-winevent".to_string())
         .spawn(|| unsafe {
             let flags = WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS;
 

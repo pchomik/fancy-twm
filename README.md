@@ -1,241 +1,210 @@
-# FancyTWM
+# Tilo
 
-FancyTWM is a tiling window manager for Windows with first-class virtual
-desktop support. It arranges your windows into configurable grid-based layouts
-(Monocle, Columns, Rows, Grid), tracks windows across monitors and virtual desktops,
-and keeps everything in place automatically.
-
-## Motivation
-
-Windows' built-in tiling and FancyZones are useful, but they lack automatic
-window management across virtual desktops and monitors. FancyTWM fills this gap:
-it watches your windows, assigns them to layout areas, and re-tiles them as you
-open, close, minimize, or move them — all while preserving window z-order.
+Tilo is a tiling window manager for Windows with virtual desktop support.
+It arranges windows into grid-based layouts (Monocle, Columns, Rows, Grid),
+tracks them across monitors and virtual desktops, and re-tiles automatically
+when windows are opened, closed, minimized, or restored.
 
 ## How it works
 
-FancyTWM reads a **grid** definition (rows × columns) from its configuration and
-lays it over each monitor's work area. A **layout** (Monocle, Columns, Rows, or Grid)
-selects which grid cells belong to each *area*. A separate position calculator
-turns those cells into concrete pixel rectangles, applying the configured gap.
+Tilo places a grid of cells (rows × columns) over each monitor's work area.
+A layout selects which cells form each *area*, and Tilo converts those cells
+into pixel rectangles with the configured gap.
 
-- **New windows** take the first area; existing windows shift toward later areas.
-  Windows already in the last area stay put.
-- **Minimized windows** are treated as untracked — remaining windows shift back
-  toward the first area.
-- **The last area is stacked**: extra windows share its rectangle. Windows controls
-  the z-order; FancyTWM never hides, activates, or reorders stacked windows.
+- New windows take the first area; existing windows shift toward later areas.
+- Minimized windows are untracked; remaining windows shift back.
+- The last area is stacked: extra windows share its rectangle. Tilo never
+  hides, activates, or reorders stacked windows.
 - Window positions are verified periodically and corrected if they drift.
 - Window movement never changes the z-order (`SWP_NOZORDER`).
 
-## Installation and Configuration
+## Requirements
 
-### Configuration
+- Windows 10 or Windows 11
+- No runtime dependencies; both executables are standalone
+- [PowerToys](https://learn.microsoft.com/en-us/windows/powertoys/) (optional,
+  for keyboard shortcuts via Keyboard Manager)
 
-Copy the example configuration file [config.toml](example/config.toml) to
-`%APPDATA%\FancyTWM\config.toml` and customize it to suit your preferences.
+## Installation
 
 ### Binaries
 
-Pre-built binaries are available through GitHub Actions.
-Download the latest ZIP archive, extract it, and place `fancytwm.exe` and
-`fancyctl.exe` in a directory of your choice.
+Pre-built binaries are available through GitHub Actions. Download the latest
+ZIP archive and extract `tilosrv.exe` and `tiloctl.exe` to a directory of your
+choice, for example `C:\Apps\tilo\`.
 
-Execute both applications before proceeding, as Windows will display a warning
-about the unknown publisher. This warning appears because the binaries are not
-signed and the application has low usage. To use them properly, confirm the
-exception when prompted.
+Run `tilosrv.exe` to start the tiling service. It runs in the background with
+a system tray icon.
 
-### Key Bindings
+### Windows security warning
 
-The recommended approach is to configure keys via
-[Keyboard Manager](https://learn.microsoft.com/en-us/windows/powertoys/keyboard-manager#remap-a-shortcut-to-start-an-app),
-which invokes `fancyctl.exe` via the command line to trigger actions.
-These are the parameters which can be configured:
+Because the binaries are not code-signed, Windows SmartScreen shows an
+"Unknown publisher" warning the first time you run each executable. This is
+expected. Click **More info** and then **Run anyway** to confirm the exception.
+You only need to do this once per executable.
 
-| Option     | Value                              |
-| ---------- | ---------------------------------- |
-| App        | Path to `fancyctl.exe` application |
-| Args       | Command and all arguments          |
-| Start in   | Default value                      |
-| Elevation  | Normal                             |
-| If running | Do nothing                         |
-| Visibility | Hidden                             |
+## Configuration
 
-#### Example
+Copy [example/config.toml](example/config.toml) to:
 
-| Option     | Value                  |
-| ---------- | ---------------------- |
-| App        | `C:\Apps\fancyctl.exe` |
-| Args       | `move-right`           |
-| Start in   | Default value          |
-| Elevation  | Normal                 |
-| If running | Do nothing             |
-| Visibility | Hidden                 |
+```
+%USERPROFILE%\.config\tilo\config.toml
+```
 
-## FancyTWM client
+### Reference
 
-The `fancyctl.exe` client communicates with `fancytwm.exe` via a named pipe at
-`\\.\pipe\fancytwm-pipe`. Communication is a JSON payload of the form:
+The full configuration with every option and its default, explained inline:
+
+```toml
+# Order of layouts used by the `cycle-layout` command.
+# Valid names: Monocle, Columns, Rows, Grid.
+cycle_order = ["Monocle", "Columns", "Rows", "Grid"]
+
+# Global grid laid over each monitor's work area. Layouts select cells from
+# this grid; Tilo converts them into pixel rectangles.
+[grid]
+rows = 4     # grid rows per monitor (default: 4)
+columns = 4  # grid columns per monitor (default: 4)
+gap = 8      # pixels between cells and around the work area (default: 0)
+
+# Periodic full window scan; complements the WinEvent hook.
+[scan]
+enabled = true      # enable the periodic scan (default: true)
+interval_ms = 1000  # scan interval in milliseconds (default: 1000)
+
+# Periodic verification of window positions.
+[periodic_check]
+enabled = true      # enable position verification (default: true)
+interval_ms = 1000  # check interval in milliseconds (default: 1000)
+tolerance = 5       # allowed pixel deviation before correcting (default: 5)
+
+# Windows matching ANY specified field are excluded from tiling. Repeat this
+# table for each rule. Both fields are regular expressions.
+[[ignore]]
+process = "explorer.exe"  # regex matched against the process name
+
+[[ignore]]
+title = "Settings"        # regex matched against the window title
+
+# One entry per virtual desktop. Repeat for each desktop.
+[[virtual_desktops]]
+name = "1"  # display name of the desktop
+
+  # One entry per monitor, ordered left to right. Repeat for each monitor.
+  [[virtual_desktops.monitors]]
+  # Optional monitor device name. When omitted, monitors are matched by
+  # position, left to right.
+  # monitor = '\\.\DISPLAY1'
+  # Layout for this monitor. One of:
+  #   Monocle - single work-area-sized stack; Windows controls z-order
+  #   Columns - up to max_columns vertical areas; extra windows stack in the last column
+  #   Rows    - up to max_rows horizontal areas; extra windows stack in the last row
+  #   Grid    - one area per grid cell in row-major order; extra windows stack in the last cell
+  layout = "Columns"
+  max_columns = 3  # maximum column areas (Columns layout)
+  # max_rows = 2   # maximum row areas (Rows layout)
+
+[[virtual_desktops]]
+name = "2"
+  [[virtual_desktops.monitors]]
+  layout = "Rows"
+  max_rows = 2
+  [[virtual_desktops.monitors]]
+  layout = "Monocle"
+```
+
+## Keyboard shortcuts
+
+The recommended way to bind keys is
+[PowerToys Keyboard Manager](https://learn.microsoft.com/en-us/windows/powertoys/keyboard-manager#remap-a-shortcut-to-start-an-app),
+which runs `tiloctl.exe` with a subcommand.
+
+Use these settings when remapping a shortcut to an app:
+
+| Option     | Value                        |
+| ---------- | ---------------------------- |
+| App        | Full path to `tiloctl.exe`   |
+| Args       | Subcommand and its arguments |
+| Start in   | Default value                |
+| Elevation  | Normal                       |
+| If running | Do nothing                   |
+| Visibility | Hidden                       |
+
+Example binding for moving a window right:
+
+| Option     | Value                      |
+| ---------- | -------------------------- |
+| App        | `C:\Apps\tilo\tiloctl.exe` |
+| Args       | `move-right`               |
+| Start in   | Default value              |
+| Elevation  | Normal                     |
+| If running | Do nothing                 |
+| Visibility | Hidden                     |
+
+## Command-line client
+
+`tiloctl.exe` sends commands to `tilosrv.exe` over the named pipe
+`\\.\pipe\tilosrv-pipe`. The payload is JSON:
 
 ```json
 {
-    "command": "string",
-    "args": ["string"]
+    "command": "MoveWindowRight",
+    "args": []
 }
 ```
 
-### Commands
+Virtual desktop indexes start at 0.
 
-#### Virtual desktops
-
-| Command                      | Args                            | Description                                     |
-| ---------------------------- | ------------------------------- | ----------------------------------------------- |
-| `MoveToNextVirtualDesktop`   | -                               | Move active window to next virtual desktop      |
-| `MoveToPrevVirtualDesktop`   | -                               | Move active window to previous virtual desktop  |
-| `MoveToVirtualDesktop`       | `[index]`                       | Move active window to specified virtual desktop |
-| `SwitchToNextVirtualDesktop` | -                               | Switch to next virtual desktop                  |
-| `SwitchToPrevVirtualDesktop` | -                               | Switch to previous virtual desktop              |
-| `SwitchToVirtualDesktop`     | `[index]`                       | Switch to specified virtual desktop             |
-
-**Important**: Virtual desktops are enumerated from 0.
-
-#### Tiling
-
-| Command               | Args | Description                                                        |
-| --------------------- | ---- | ------------------------------------------------------------------ |
-| `RetileActiveMonitor` | -    | Recompute and apply tiling for the active monitor                  |
-| `RetileVirtualDesktop`| -    | Recompute and apply tiling for all monitors on the current desktop |
-
-#### Window movement
-
-| Command           | Args | Description                                                        |
-| ----------------- | ---- | ------------------------------------------------------------------ |
-| `MoveWindowRight` | -    | Move right in Columns/Grid, crossing at edge; change monitor in Monocle/Rows |
-| `MoveWindowLeft`  | -    | Move left in Columns/Grid, crossing at edge; change monitor in Monocle/Rows  |
-| `MoveWindowUp`    | -    | Move up in Rows/Grid                                               |
-| `MoveWindowDown`  | -    | Move down in Rows/Grid                                             |
-
-### `fancyctl` subcommands
-
-The CLI exposes the commands above as subcommands:
-
-```
-fancyctl move-to-next-virtual-desktop
-fancyctl move-to-prev-virtual-desktop
-fancyctl move-to-virtual-desktop --idx 0
-fancyctl switch-to-next-virtual-desktop
-fancyctl switch-to-prev-virtual-desktop
-fancyctl switch-to-virtual-desktop --idx 0
-fancyctl retile-monitor
-fancyctl retile-vd
-fancyctl move-right
-fancyctl move-left
-fancyctl move-up
-fancyctl move-down
-```
-
-## Features
-
-### Layouts
-
-| Layout      | Description                                                                                     |
-| ----------- | ----------------------------------------------------------------------------------------------- |
-| **Monocle** | A single work-area-sized stack; Windows controls z-order                                       |
-| **Columns** | Up to `max_columns` vertical areas; extra windows stack in the last column                     |
-| **Rows**    | Up to `max_rows` horizontal areas; extra windows stack in the last row                         |
-| **Grid**    | One area per grid cell in row-major order; extra windows stack in the last cell                |
-
-### Window tracking
-
-Windows are tracked via WinEvent hooks (create, destroy, minimize, restore,
-move/resize end), with an optional periodic scan as a fallback. Only windows
-that are visible, not minimized, top-level, not tool windows, and resizable are
-tiled. Windows matching any ignore rule are excluded.
-
-### Ignore rules
-
-Each rule may specify a `process` and/or `title` regular expression. A window is
-ignored when **any** specified field matches.
-
-## Configuration reference
-
-```toml
-[grid]
-rows = 4        # grid rows per monitor
-columns = 4     # grid columns per monitor
-gap = 8         # pixels between cells and around the work area
-
-[scan]
-enabled = true      # enable periodic window scan fallback
-interval_ms = 1000  # scan interval
-
-[periodic_check]
-enabled = true      # enable periodic position verification
-interval_ms = 1000  # check interval
-tolerance = 5       # allowed pixel deviation before correcting
-
-[[ignore]]
-process = "explorer.exe"   # regex on process name
-title = "Settings"         # regex on window title
-
-[[virtual_desktops]]
-name = "1"
-  [[virtual_desktops.monitors]]   # one entry per monitor, left to right
-  layout = "Columns"              # Monocle | Columns | Rows | Grid
-  max_columns = 3                 # for Columns
-  max_rows = 2                    # for Rows
-```
-
-## Project Structure
-
-| Workspace      | Purpose                                                                    |
-| -------------- | -------------------------------------------------------------------------- |
-| **fancy-twm**  | Core application for managing windows across monitors and virtual desktops |
-| **fancy-ctl**  | Command-line tool for triggering actions                                   |
-| **fancy-core** | Shared library containing code common to all FancyTWM components           |
-
-### Module overview (`fancy-twm`)
-
-| Module       | Responsibility                                                        |
-| ------------ | --------------------------------------------------------------------- |
-| `platform`   | Win10/Win11 abstraction: windows, monitors, virtual desktops, hooks   |
-| `vd`         | Virtual desktop navigation operations                                 |
-| `tracker`    | Window tracking (WinEvent hooks + periodic scan) and ignore rules     |
-| `grid`       | Grid model and single-cell geometry                                   |
-| `layout`     | Monocle/Columns/Rows/Grid layouts selecting grid cells per area       |
-| `position`   | Converts selected cells into pixel rectangles                         |
-| `tiling`     | Tiling engine: assignment, shift logic, terminal stacking, position check |
-| `config`     | Configuration schema                                                  |
-| `ipc`        | Named pipe server                                                     |
-| `tray`       | System tray icon                                                      |
-| `app`        | Main loop and command dispatch                                        |
+| Subcommand                       | Args            | Description                                                                                          |
+| -------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
+| `move-to-next-virtual-desktop`   | —               | Move active window to next virtual desktop                                                           |
+| `move-to-prev-virtual-desktop`   | —               | Move active window to previous virtual desktop                                                       |
+| `move-to-virtual-desktop`        | `--idx N`       | Move active window to virtual desktop N                                                              |
+| `switch-to-next-virtual-desktop` | —               | Switch to next virtual desktop                                                                       |
+| `switch-to-prev-virtual-desktop` | —               | Switch to previous virtual desktop                                                                   |
+| `switch-to-virtual-desktop`      | `--idx N`       | Switch to virtual desktop N                                                                          |
+| `retile-monitor`                 | —               | Recompute and apply tiling for the active monitor                                                    |
+| `retile-vd`                      | —               | Recompute and apply tiling for all monitors on the current desktop                                   |
+| `move-right`                     | —               | Move right in Columns/Grid; crosses to next monitor at the edge; changes monitor in Monocle/Rows     |
+| `move-left`                      | —               | Move left in Columns/Grid; crosses to previous monitor at the edge; changes monitor in Monocle/Rows  |
+| `move-up`                        | —               | Move up in Rows/Grid                                                                                 |
+| `move-down`                      | —               | Move down in Rows/Grid                                                                               |
+| `cycle-layout`                   | —               | Cycle the layout of the monitor with the focused window using `cycle_order`                          |
+| `set-layout`                     | `--layout NAME` | Set the layout of the monitor with the focused window (`Monocle`, `Columns`, `Rows`, or `Grid`, case-insensitive) |
 
 ## Building
 
+Requires the Rust toolchain (edition 2024).
+
 ```sh
 # Windows 10 (default)
-cargo build
+cargo build --release
 
 # Windows 11
-cargo build --no-default-features --features windows11
+cargo build --release --no-default-features --features windows11
 ```
+
+Binaries are written to `target/release/`.
 
 ## Limitations
 
-### Visual Blink on Desktop Switch
+### Visual blink on desktop switch
 
-The application may blink when switching desktops with arguments.
-Therefore, it is recommended to use built-in Windows shortcuts for desktop
-switching and remap them in AHK if custom shortcuts are needed. FancyTWM still
-provides this functionality.
+The screen may blink when switching desktops via `tiloctl`. Use the built-in
+Windows shortcuts for desktop switching instead. Tilo still provides this
+functionality if needed.
 
-### Windows 10 Virtual Desktop Offset
+### Windows 10 virtual desktop offset
 
-In Windows 10, there is a need to add one extra Virtual Desktop because the
-library used under the hood does not return the last Virtual Desktop.
+On Windows 10, create one extra virtual desktop. The underlying library does
+not return the last desktop.
 
 ### Monitor arrangement
 
-Only monitors arranged horizontally (left/right) are supported for cross-monitor
-window movement. Vertically stacked monitors are not supported.
+Cross-monitor window movement only works with horizontally arranged monitors
+(left/right). Vertically stacked monitors are not supported.
+
+## License
+
+Copyright © Pawel Chomicki. Licensed under the
+[GNU General Public License v3.0](LICENSE).

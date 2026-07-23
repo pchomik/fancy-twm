@@ -13,7 +13,7 @@ use crate::vd::{
 // Result also allows to use ? for any case.
 // Context allows to define custom error message.
 use anyhow::{Context, Result};
-use fancycore::message::Command;
+use tilo_core::message::Command;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;

@@ -1,5 +1,5 @@
 [package]
-name = "fancytwm"
+name = "tilosrv"
 version = "0.1.0"
 edition = "2024"
 build = "build.rs"
@@ -10,7 +10,7 @@ windows10 = ["winvd_win10", "windows_win10"]
 windows11 = ["winvd_win11", "windows_win11"]
 
 [dependencies]
-fancycore = { path = "../fancy-core" }
+tilo-core = { path = "../tilo-core" }
 anyhow = "1.0.102"
 ctrlc = "3.0"
 dirs = "6.0.0"

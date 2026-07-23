@@ -16,7 +16,7 @@ impl TrayController {
         let icon = TrayIconBuilder::new()
             .with_icon(TrayController::load_icon()?)
             .with_menu(Box::new(menu))
-            .with_tooltip("FancyTWM")
+            .with_tooltip("Tilo")
             .build()
             .context("Failed to start tray icon")?;
         Ok(Self { icon, menu_items })

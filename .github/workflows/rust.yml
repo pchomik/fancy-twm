@@ -21,10 +21,10 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: fancytwm-win10
+        name: tilosrv-win10
         path: |
-          target/release/fancytwm.exe
-          target/release/fancyctl.exe
+          target/release/tilosrv.exe
+          target/release/tiloctl.exe
 
   build-win11:
 
@@ -37,7 +37,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: fancytwm-win11
+        name: tilosrv-win11
         path: |
-          target/release/fancytwm.exe
-          target/release/fancyctl.exe
+          target/release/tilosrv.exe
+          target/release/tiloctl.exe
