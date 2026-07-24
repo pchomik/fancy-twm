@@ -44,6 +44,8 @@ use windows_win11::Win32::UI::WindowsAndMessaging::{
 
 // ── GDI / Monitor APIs ───────────────────────────────────────────────
 #[cfg(feature = "windows10")]
+use windows_win10::Win32::Graphics::Dwm::{DWMWA_EXTENDED_FRAME_BOUNDS, DwmGetWindowAttribute};
+#[cfg(feature = "windows10")]
 use windows_win10::Win32::Graphics::Gdi::{
     EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITOR_DEFAULTTONEAREST, MONITORINFO,
     MONITORINFOEXW, MonitorFromWindow,
@@ -53,6 +55,8 @@ use windows_win10::Win32::UI::HiDpi::{
     DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, GetDpiForMonitor, MDT_EFFECTIVE_DPI,
     SetProcessDpiAwarenessContext,
 };
+#[cfg(feature = "windows11")]
+use windows_win11::Win32::Graphics::Dwm::{DWMWA_EXTENDED_FRAME_BOUNDS, DwmGetWindowAttribute};
 #[cfg(feature = "windows11")]
 use windows_win11::Win32::Graphics::Gdi::{
     EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITOR_DEFAULTTONEAREST, MONITORINFO,
@@ -605,7 +609,8 @@ pub fn get_window_process_name(hwnd: HWND) -> String {
     }
 }
 
-/// Returns the window's outer rectangle in screen coordinates.
+/// Returns the window's outer rectangle in screen coordinates (including
+/// invisible DWM shadow borders).
 pub fn get_window_rect(hwnd: HWND) -> Option<Rect> {
     unsafe {
         let mut rect = RECT::default();
@@ -619,6 +624,33 @@ pub fn get_window_rect(hwnd: HWND) -> Option<Rect> {
             Some(Rect::from_win_rect(&rect))
         } else {
             None
+        }
+    }
+}
+
+/// Returns the window's *visible* rectangle (excluding invisible DWM shadow
+/// borders) in screen coordinates.
+///
+/// Falls back to `get_window_rect` if the DWM query fails.
+pub fn get_visible_window_rect(hwnd: HWND) -> Option<Rect> {
+    unsafe {
+        let mut rect = RECT::default();
+        let hr = DwmGetWindowAttribute(
+            hwnd,
+            DWMWA_EXTENDED_FRAME_BOUNDS,
+            &mut rect as *mut RECT as *mut _,
+            std::mem::size_of::<RECT>() as u32,
+        );
+
+        #[cfg(feature = "windows10")]
+        let ok = hr.is_ok();
+        #[cfg(feature = "windows11")]
+        let ok = hr.is_ok();
+
+        if ok {
+            Some(Rect::from_win_rect(&rect))
+        } else {
+            get_window_rect(hwnd)
         }
     }
 }
@@ -691,23 +723,84 @@ pub fn is_window_tileable(hwnd: HWND) -> bool {
 
 // ── Window manipulation ──────────────────────────────────────────────
 
+/// Returns the invisible border thickness (DWM shadow borders) of a window.
+///
+/// Windows renders invisible borders around most windows for the drop-shadow
+/// effect. `GetWindowRect` includes these borders, but they are not visible.
+/// This function computes the difference between the outer rect (from
+/// `GetWindowRect`) and the visible rect (from `DWMWA_EXTENDED_FRAME_BOUNDS`)
+/// so callers can compensate when positioning windows.
+///
+/// Returns `(left, top, right, bottom)` border widths in pixels.
+fn get_invisible_borders(hwnd: HWND) -> (i32, i32, i32, i32) {
+    unsafe {
+        let mut outer = RECT::default();
+        #[cfg(feature = "windows10")]
+        let outer_ok = GetWindowRect(hwnd, &mut outer).as_bool();
+        #[cfg(feature = "windows11")]
+        let outer_ok = GetWindowRect(hwnd, &mut outer).is_ok();
+
+        if !outer_ok {
+            return (0, 0, 0, 0);
+        }
+
+        let mut visible = RECT::default();
+        let hr = DwmGetWindowAttribute(
+            hwnd,
+            DWMWA_EXTENDED_FRAME_BOUNDS,
+            &mut visible as *mut RECT as *mut _,
+            std::mem::size_of::<RECT>() as u32,
+        );
+
+        #[cfg(feature = "windows10")]
+        let dwm_ok = hr.is_ok();
+        #[cfg(feature = "windows11")]
+        let dwm_ok = hr.is_ok();
+
+        if !dwm_ok {
+            return (0, 0, 0, 0);
+        }
+
+        (
+            visible.left - outer.left,
+            visible.top - outer.top,
+            outer.right - visible.right,
+            outer.bottom - visible.bottom,
+        )
+    }
+}
+
 /// Moves and resizes a window without changing its z-order or activation.
+///
+/// Compensates for invisible DWM shadow borders so the *visible* portion of
+/// the window matches the requested rectangle exactly. Without this, the top
+/// gap appears smaller than the others because Windows renders asymmetric
+/// invisible borders (typically 0px top, ~7px on other sides).
 ///
 /// `SWP_NOSENDCHANGING` suppresses `WM_WINDOWPOSCHANGING`/`WM_WINDOWPOSCHANGED`
 /// messages so the target window does not perform its own intermediate resize
 /// in response to the move — this prevents a visible double-resize when moving
 /// between monitors with different DPI settings.
 pub fn set_window_pos(hwnd: HWND, rect: Rect) -> bool {
+    let (bl, bt, br, bb) = get_invisible_borders(hwnd);
+
+    let adjusted = Rect {
+        left: rect.left - bl,
+        top: rect.top - bt,
+        right: rect.right + br,
+        bottom: rect.bottom + bb,
+    };
+
     unsafe {
         #[cfg(feature = "windows10")]
         {
             SetWindowPos(
                 hwnd,
                 None,
-                rect.left,
-                rect.top,
-                rect.width(),
-                rect.height(),
+                adjusted.left,
+                adjusted.top,
+                adjusted.width(),
+                adjusted.height(),
                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING,
             )
             .as_bool()
@@ -717,10 +810,10 @@ pub fn set_window_pos(hwnd: HWND, rect: Rect) -> bool {
             SetWindowPos(
                 hwnd,
                 None,
-                rect.left,
-                rect.top,
-                rect.width(),
-                rect.height(),
+                adjusted.left,
+                adjusted.top,
+                adjusted.width(),
+                adjusted.height(),
                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING,
             )
             .is_ok()

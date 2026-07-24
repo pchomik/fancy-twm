@@ -433,7 +433,7 @@ impl TilingEngine {
                     if platform::is_window_maximized_or_fullscreen(*hwnd) {
                         continue;
                     }
-                    let Some(actual) = platform::get_window_rect(*hwnd) else {
+                    let Some(actual) = platform::get_visible_window_rect(*hwnd) else {
                         continue;
                     };
                     if rects_differ(&actual, &expected, tolerance) {
