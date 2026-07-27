@@ -22,10 +22,16 @@ toml = "1.1.2"
 tray-icon = "0.22.0"
 windows_win10 = { package = "windows", version = "0.44.0", optional = true, features = [
     "Foundation",
+    "Foundation_Numerics",
     "Media_Control",
     "Win32_Foundation",
+    "Win32_Graphics_Direct2D",
+    "Win32_Graphics_Direct2D_Common",
     "Win32_Graphics_Dwm",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
     "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",
     "Win32_Media_Audio",
     "Win32_Media_Audio_Endpoints",
     "Win32_System_Com",
@@ -39,10 +45,16 @@ windows_win10 = { package = "windows", version = "0.44.0", optional = true, feat
 ] }
 windows_win11 = { package = "windows", version = "0.58.0", optional = true, features = [
     "Foundation",
+    "Foundation_Numerics",
     "Media_Control",
     "Win32_Foundation",
+    "Win32_Graphics_Direct2D",
+    "Win32_Graphics_Direct2D_Common",
     "Win32_Graphics_Dwm",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
     "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",
     "Win32_Media_Audio",
     "Win32_Media_Audio_Endpoints",
     "Win32_System_Com",

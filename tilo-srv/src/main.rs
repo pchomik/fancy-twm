@@ -4,6 +4,7 @@ use anyhow::Result;
 use dirs::home_dir;
 
 mod app;
+mod border;
 mod config;
 mod grid;
 mod ipc;

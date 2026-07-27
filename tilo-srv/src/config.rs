@@ -31,6 +31,10 @@ pub struct AppConfig {
     /// Uses layout names: "Monocle", "Columns", "Rows".
     #[serde(default = "default_cycle_order")]
     pub cycle_order: Vec<Layout>,
+
+    /// Active-window border overlay.
+    #[serde(default)]
+    pub window_border: WindowBorderConfig,
 }
 
 impl AppConfig {
@@ -168,4 +172,54 @@ fn default_tolerance() -> i32 {
 
 fn default_cycle_order() -> Vec<Layout> {
     vec![Layout::Monocle, Layout::Columns, Layout::Rows, Layout::Grid]
+}
+
+/// Active-window border overlay configuration.
+#[derive(Debug, Deserialize, Clone)]
+pub struct WindowBorderConfig {
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    /// Border thickness in logical pixels (DPI-scaled).
+    #[serde(default = "default_border_width")]
+    pub width: i32,
+    /// Corner radius in logical pixels (DPI-scaled), 0 = sharp corners.
+    #[serde(default)]
+    pub radius: i32,
+    /// Hex RGB color, e.g. "#8dbcff".
+    #[serde(default = "default_border_color")]
+    pub color: String,
+    /// Windows matching any rule never get a border.
+    #[serde(default)]
+    pub ignore: Vec<BorderIgnoreRule>,
+}
+
+impl Default for WindowBorderConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            width: default_border_width(),
+            radius: 0,
+            color: default_border_color(),
+            ignore: Vec::new(),
+        }
+    }
+}
+
+fn default_border_width() -> i32 {
+    3
+}
+
+fn default_border_color() -> String {
+    "#8dbcff".to_string()
+}
+
+/// A window is border-ignored when ANY specified field's regex matches.
+#[derive(Debug, Deserialize, Clone, Default)]
+pub struct BorderIgnoreRule {
+    /// Regex matched against the process name (e.g. `explorer.exe`).
+    #[serde(default)]
+    pub process: Option<String>,
+    /// Regex matched against the window title.
+    #[serde(default)]
+    pub title: Option<String>,
 }

@@ -105,6 +105,7 @@ use windows_win11::Win32::UI::Accessibility::SetWinEventHook;
 
 // WinEvent constants (not always exposed as named items in older windows crates).
 const EVENT_SYSTEM_MOVESIZEEND: u32 = 0x000B;
+const EVENT_SYSTEM_FOREGROUND: u32 = 0x0003;
 const EVENT_SYSTEM_MINIMIZESTART: u32 = 0x0016;
 const EVENT_SYSTEM_MINIMIZEEND: u32 = 0x0017;
 const EVENT_OBJECT_CREATE: u32 = 0x8000;
@@ -684,6 +685,47 @@ pub fn is_window(hwnd: HWND) -> bool {
     unsafe { IsWindow(hwnd).as_bool() }
 }
 
+/// Whether the window is visible.
+pub fn is_window_visible(hwnd: HWND) -> bool {
+    unsafe { IsWindowVisible(hwnd).as_bool() }
+}
+
+/// Returns the window's class name (e.g. `CabinetWClass`).
+pub fn get_window_class_name(hwnd: HWND) -> String {
+    #[cfg(feature = "windows10")]
+    use windows_win10::Win32::UI::WindowsAndMessaging::GetClassNameW;
+    #[cfg(feature = "windows11")]
+    use windows_win11::Win32::UI::WindowsAndMessaging::GetClassNameW;
+
+    unsafe {
+        let mut buf: Vec<u16> = vec![0; 256];
+        let len = GetClassNameW(hwnd, &mut buf);
+        if len <= 0 {
+            return String::new();
+        }
+        String::from_utf16_lossy(&buf[..len as usize])
+    }
+}
+
+/// Returns the DPI of the display the window is on. Falls back to 96.
+pub fn get_dpi_for_window(hwnd: HWND) -> u32 {
+    #[cfg(feature = "windows10")]
+    use windows_win10::Win32::UI::HiDpi::GetDpiForWindow;
+    #[cfg(feature = "windows11")]
+    use windows_win11::Win32::UI::HiDpi::GetDpiForWindow;
+
+    unsafe {
+        let dpi = GetDpiForWindow(hwnd);
+        if dpi == 0 { 96 } else { dpi }
+    }
+}
+
+/// Returns the visible frame bounds (DWM extended frame bounds), falling
+/// back to the outer window rect on failure.
+pub fn get_extended_frame_bounds(hwnd: HWND) -> Option<Rect> {
+    get_visible_window_rect(hwnd)
+}
+
 /// Whether a window should be considered for tiling.
 ///
 /// A tileable window is visible, not minimized, has no owner, is not a
@@ -834,6 +876,7 @@ pub enum WindowEvent {
     Minimized(WindowHandle),
     Restored(WindowHandle),
     Moved(WindowHandle),
+    ForegroundChanged(WindowHandle),
 }
 
 /// A thread-safe wrapper around a raw window handle.
@@ -921,6 +964,8 @@ fn handle_win_event(event: u32, hwnd: HWND, id_object: i32) {
         WindowEvent::Restored(handle)
     } else if event == EVENT_SYSTEM_MOVESIZEEND {
         WindowEvent::Moved(handle)
+    } else if event == EVENT_SYSTEM_FOREGROUND {
+        WindowEvent::ForegroundChanged(handle)
     } else {
         return;
     };
@@ -963,7 +1008,17 @@ pub fn start_window_event_listener() -> Result<mpsc::Receiver<WindowEvent>> {
                 flags,
             );
 
-            if h1.is_invalid() || h2.is_invalid() {
+            let h3 = SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND,
+                None,
+                Some(win_event_proc),
+                0,
+                0,
+                flags,
+            );
+
+            if h1.is_invalid() || h2.is_invalid() || h3.is_invalid() {
                 eprintln!("Failed to install WinEvent hooks");
                 return;
             }

@@ -1,4 +1,5 @@
 use crate::config::AppConfig;
+use crate::border::BorderOverlay;
 use crate::ipc::IpcServerController;
 use crate::platform::{VirtualDesktopTracker, pump_windows_messages};
 use crate::tiling::{MoveDir, TilingEngine};
@@ -30,6 +31,7 @@ pub struct App {
     vd_tracker: VirtualDesktopTracker,
     window_tracker: WindowTracker,
     tiling: TilingEngine,
+    border: Option<BorderOverlay>,
     last_position_check: Instant,
 }
 
@@ -45,6 +47,7 @@ impl App {
         let vd_tracker = VirtualDesktopTracker::new()?;
         let window_tracker = WindowTracker::new(&config)?;
         let tiling = TilingEngine::new(&config, vd_tracker.current_index())?;
+        let border = BorderOverlay::new(&config.window_border)?;
 
         Ok(Self {
             config,
@@ -53,6 +56,7 @@ impl App {
             vd_tracker,
             window_tracker,
             tiling,
+            border,
             last_position_check: Instant::now(),
         })
     }
@@ -77,6 +81,9 @@ impl App {
             // Detect virtual desktop changes.
             if let Some(new_vd) = self.vd_tracker.check_for_changes() {
                 crate::log!("app: VD changed to {}", new_vd);
+                if let Some(border) = &self.border {
+                    border.hide();
+                }
                 self.tiling.on_vd_changed(&self.config, new_vd);
                 // Refresh the tracker for the new VD before re-tiling so we
                 // don't apply the new layout to the previous VD's windows.
@@ -87,6 +94,11 @@ impl App {
             // Poll window tracker (WinEvent hooks + periodic scan).
             if self.window_tracker.poll() {
                 self.retile();
+            }
+
+            // Update active-window border overlay.
+            if let Some(border) = &mut self.border {
+                border.update();
             }
 
             // Periodic position verification & correction.

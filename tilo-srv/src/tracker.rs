@@ -204,6 +204,9 @@ impl WindowTracker {
                     // Position changes are handled by the periodic position
                     // check, not by re-tiling.
                 }
+                WindowEvent::ForegroundChanged(_) => {
+                    // Handled by the border overlay each loop iteration.
+                }
             }
         }
 
