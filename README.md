@@ -1,5 +1,9 @@
 # Tilo
 
+[![Build](https://github.com/pchomik/tilo/actions/workflows/build.yml/badge.svg)](https://github.com/pchomik/tilo/actions/workflows/rust.yml)
+[![Windows 10](https://img.shields.io/badge/Windows-10-0078D6?logo=windows)](https://www.microsoft.com/windows)
+[![Windows 11](https://img.shields.io/badge/Windows-11-0078D6?logo=windows)](https://www.microsoft.com/windows)
+
 Tilo is a tiling window manager for Windows with virtual desktop support.
 It arranges windows into grid-based layouts (Monocle, Columns, Rows, Grid),
 tracks them across monitors and virtual desktops, and re-tiles automatically
@@ -17,6 +21,7 @@ into pixel rectangles with the configured gap.
   hides, activates, or reorders stacked windows.
 - Window positions are verified periodically and corrected if they drift.
 - Window movement never changes the z-order (`SWP_NOZORDER`).
+- The focused window can be highlighted with a configurable colored border.
 
 ## Requirements
 
@@ -93,6 +98,21 @@ process = "explorer.exe"  # regex matched against the process name
 
 [[ignore]]
 title = "Settings"        # regex matched against the window title
+
+# Colored frame drawn around the currently focused window.
+[window_border]
+enabled = true       # draw the active-window border (default: true)
+width = 3            # border thickness in logical pixels, DPI-scaled (default: 3)
+radius = 0           # corner radius in logical pixels, 0 = sharp corners (default: 0)
+color = "#8dbcff"    # hex RGB border color (default: "#8dbcff")
+
+# Windows matching ANY specified field (regex) never get a border. Repeat this
+# table for each rule. No rules are defined by default.
+# [[window_border.ignore]]
+# process = "explorer.exe"  # regex matched against the process name
+#
+# [[window_border.ignore]]
+# title = "System"          # regex matched against the window title
 
 # One entry per virtual desktop. Repeat for each desktop.
 [[virtual_desktops]]
