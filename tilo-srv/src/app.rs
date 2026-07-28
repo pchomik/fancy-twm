@@ -112,6 +112,9 @@ impl App {
             }
 
             if let Some(action) = self.ipc_server.read() {
+                if let Some(border) = &self.border {
+                    border.hide();
+                }
                 match action.command {
                     Command::MoveToNextVirtualDesktop => {
                         move_active_window_to_next_virtual_desktop()
