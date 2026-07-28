@@ -21,12 +21,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Generate timestamp
+      id: ts
+      shell: bash
+      run: echo "value=$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
     - name: Build
       run: cargo build --release --no-default-features --features ${{ matrix.feature }}
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tilosrv-${{ matrix.feature }}
+        name: tilo-${{ steps.ts.outputs.value }}-${{ matrix.feature }}
         path: |
           target/release/tilosrv.exe
           target/release/tiloctl.exe
