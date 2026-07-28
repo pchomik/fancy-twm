@@ -1,6 +1,6 @@
 # Tilo
 
-[![Build](https://github.com/pchomik/tilo/actions/workflows/build.yml/badge.svg)](https://github.com/pchomik/tilo/actions/workflows/rust.yml)
+[![Build](https://github.com/pchomik/tilo/actions/workflows/build.yml/badge.svg)](https://github.com/pchomik/tilo/actions/workflows/build.yml)
 [![Windows 10](https://img.shields.io/badge/Windows-10-0078D6?logo=windows)](https://www.microsoft.com/windows)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D6?logo=windows)](https://www.microsoft.com/windows)
 
