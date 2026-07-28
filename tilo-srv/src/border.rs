@@ -190,7 +190,12 @@ impl BorderOverlay {
     }
 
     /// Re-evaluates the foreground window and redraws or hides the border.
-    pub fn update(&mut self) {
+    pub fn update(&mut self, suppress: bool) {
+        if suppress {
+            self.hide();
+            return;
+        }
+
         let Some(fg) = platform::get_foreground_window() else {
             self.hide();
             return;

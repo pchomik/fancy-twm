@@ -104,6 +104,7 @@ use windows_win10::Win32::UI::Accessibility::SetWinEventHook;
 use windows_win11::Win32::UI::Accessibility::SetWinEventHook;
 
 // WinEvent constants (not always exposed as named items in older windows crates).
+const EVENT_SYSTEM_MOVESIZESTART: u32 = 0x000A;
 const EVENT_SYSTEM_MOVESIZEEND: u32 = 0x000B;
 const EVENT_SYSTEM_FOREGROUND: u32 = 0x0003;
 const EVENT_SYSTEM_MINIMIZESTART: u32 = 0x0016;
@@ -875,6 +876,7 @@ pub enum WindowEvent {
     Destroyed(WindowHandle),
     Minimized(WindowHandle),
     Restored(WindowHandle),
+    MoveStart(WindowHandle),
     Moved(WindowHandle),
     ForegroundChanged(WindowHandle),
 }
@@ -962,6 +964,8 @@ fn handle_win_event(event: u32, hwnd: HWND, id_object: i32) {
         WindowEvent::Minimized(handle)
     } else if event == EVENT_SYSTEM_MINIMIZEEND {
         WindowEvent::Restored(handle)
+    } else if event == EVENT_SYSTEM_MOVESIZESTART {
+        WindowEvent::MoveStart(handle)
     } else if event == EVENT_SYSTEM_MOVESIZEEND {
         WindowEvent::Moved(handle)
     } else if event == EVENT_SYSTEM_FOREGROUND {
@@ -999,8 +1003,8 @@ pub fn start_window_event_listener() -> Result<mpsc::Receiver<WindowEvent>> {
                 flags,
             );
             let h2 = SetWinEventHook(
-                EVENT_SYSTEM_MINIMIZESTART,
-                EVENT_SYSTEM_MOVESIZEEND,
+                EVENT_SYSTEM_MOVESIZESTART,
+                EVENT_SYSTEM_MINIMIZEEND,
                 None,
                 Some(win_event_proc),
                 0,

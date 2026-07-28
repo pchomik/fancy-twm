@@ -98,7 +98,7 @@ impl App {
 
             // Update active-window border overlay.
             if let Some(border) = &mut self.border {
-                border.update();
+                border.update(self.window_tracker.is_moving());
             }
 
             // Periodic position verification & correction.

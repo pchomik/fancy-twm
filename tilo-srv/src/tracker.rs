@@ -31,6 +31,8 @@ pub struct WindowTracker {
     scan_interval_ms: u64,
     /// When the last periodic scan ran.
     last_scan: Instant,
+    /// Whether a window is currently being moved/resized by the user.
+    moving: bool,
 }
 
 impl WindowTracker {
@@ -68,6 +70,7 @@ impl WindowTracker {
             last_scan: Instant::now()
                 .checked_sub(std::time::Duration::from_millis(config.scan.interval_ms))
                 .unwrap_or_else(Instant::now),
+            moving: false,
         };
 
         // Initial population.
@@ -199,10 +202,13 @@ impl WindowTracker {
                         self.remove(hwnd);
                         changed = true;
                     }
+                    self.moving = false;
+                }
+                WindowEvent::MoveStart(_) => {
+                    self.moving = true;
                 }
                 WindowEvent::Moved(_) => {
-                    // Position changes are handled by the periodic position
-                    // check, not by re-tiling.
+                    self.moving = false;
                 }
                 WindowEvent::ForegroundChanged(_) => {
                     // Handled by the border overlay each loop iteration.
@@ -228,5 +234,10 @@ impl WindowTracker {
     /// Returns the current ordered list of tracked windows.
     pub fn windows(&self) -> &[HWND] {
         &self.windows
+    }
+
+    /// Whether a window is currently being moved/resized by the user.
+    pub fn is_moving(&self) -> bool {
+        self.moving
     }
 }
