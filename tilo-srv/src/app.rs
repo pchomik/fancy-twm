@@ -1,7 +1,7 @@
 use crate::config::AppConfig;
 use crate::border::BorderOverlay;
 use crate::ipc::IpcServerController;
-use crate::platform::{VirtualDesktopTracker, pump_windows_messages};
+use crate::platform::{VirtualDesktopTracker, is_mouse_button_pressed, pump_windows_messages};
 use crate::tiling::{MoveDir, TilingEngine};
 use crate::tracker::WindowTracker;
 use crate::tray::TrayController;
@@ -33,6 +33,7 @@ pub struct App {
     tiling: TilingEngine,
     border: Option<BorderOverlay>,
     last_position_check: Instant,
+    mouse_was_pressed: bool,
 }
 
 impl App {
@@ -58,6 +59,7 @@ impl App {
             tiling,
             border,
             last_position_check: Instant::now(),
+            mouse_was_pressed: false,
         })
     }
 
@@ -78,6 +80,15 @@ impl App {
                 break;
             }
 
+            let mouse_pressed = is_mouse_button_pressed();
+
+            if self.mouse_was_pressed && !mouse_pressed {
+                self.last_position_check = Instant::now();
+                self.window_tracker.reset_scan_timer();
+                self.retile();
+            }
+            self.mouse_was_pressed = mouse_pressed;
+
             // Detect virtual desktop changes.
             if let Some(new_vd) = self.vd_tracker.check_for_changes() {
                 crate::log!("app: VD changed to {}", new_vd);
@@ -92,17 +103,17 @@ impl App {
             }
 
             // Poll window tracker (WinEvent hooks + periodic scan).
-            if self.window_tracker.poll() {
+            if self.window_tracker.poll() && !mouse_pressed {
                 self.retile();
             }
 
             // Update active-window border overlay.
             if let Some(border) = &mut self.border {
-                border.update(self.window_tracker.is_moving());
+                border.update(self.window_tracker.is_moving() || mouse_pressed);
             }
 
             // Periodic position verification & correction.
-            if self.config.periodic_check.enabled {
+            if self.config.periodic_check.enabled && !mouse_pressed {
                 let interval = Duration::from_millis(self.config.periodic_check.interval_ms);
                 if self.last_position_check.elapsed() >= interval {
                     self.tiling

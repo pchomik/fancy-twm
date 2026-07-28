@@ -120,6 +120,28 @@ use winvd_win10::{get_current_desktop, get_desktops, go_to_desktop, move_window_
 #[cfg(feature = "windows11")]
 use winvd_win11::{get_current_desktop, get_desktops, move_window_to_desktop, switch_desktop};
 
+// ── Mouse state ─────────────────────────────────────────────────────
+
+#[cfg(feature = "windows10")]
+use windows_win10::Win32::UI::Input::KeyboardAndMouse::GetAsyncKeyState;
+#[cfg(feature = "windows11")]
+use windows_win11::Win32::UI::Input::KeyboardAndMouse::GetAsyncKeyState;
+
+const VK_LBUTTON: i32 = 0x01;
+const VK_RBUTTON: i32 = 0x02;
+
+/// Returns `true` while the left or right mouse button is held down.
+///
+/// Uses `GetAsyncKeyState` which queries the hardware-level key state,
+/// independent of focus or message queue.
+pub fn is_mouse_button_pressed() -> bool {
+    unsafe {
+        let left = GetAsyncKeyState(VK_LBUTTON);
+        let right = GetAsyncKeyState(VK_RBUTTON);
+        (left < 0) || (right < 0)
+    }
+}
+
 // ── Foreground window ────────────────────────────────────────────────
 
 /// Sets the process DPI awareness to Per-Monitor V2.

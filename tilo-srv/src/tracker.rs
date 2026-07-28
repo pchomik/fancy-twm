@@ -240,4 +240,12 @@ impl WindowTracker {
     pub fn is_moving(&self) -> bool {
         self.moving
     }
+
+    /// Resets the periodic scan timer to now.
+    ///
+    /// Called after a mouse interaction ends so the scan does not fire
+    /// immediately and cause a premature re-tile before windows settle.
+    pub fn reset_scan_timer(&mut self) {
+        self.last_scan = Instant::now();
+    }
 }
