@@ -32,7 +32,9 @@ pub struct WindowTracker {
     /// When the last periodic scan ran.
     last_scan: Instant,
     /// Whether a window is currently being moved/resized by the user.
-    moving: bool,
+    moving_window: Option<HWND>,
+    /// Dedup flag: log "scan SKIPPED" only once per skip episode.
+    scan_skip_logged: bool,
 }
 
 impl WindowTracker {
@@ -70,7 +72,8 @@ impl WindowTracker {
             last_scan: Instant::now()
                 .checked_sub(std::time::Duration::from_millis(config.scan.interval_ms))
                 .unwrap_or_else(Instant::now),
-            moving: false,
+            moving_window: None,
+            scan_skip_logged: false,
         };
 
         // Initial population.
@@ -120,17 +123,23 @@ impl WindowTracker {
     /// windows on the current VD.
     fn full_scan(&mut self) {
         // Keep existing windows that are still valid.
-        let mut ordered: Vec<HWND> = self
-            .windows
-            .iter()
-            .copied()
-            .filter(|&hwnd| {
-                platform::is_window(hwnd)
-                    && platform::is_window_on_current_vd(hwnd)
-                    && platform::is_window_tileable(hwnd)
-                    && !self.is_ignored(hwnd)
-            })
-            .collect();
+        let mut ordered: Vec<HWND> = Vec::new();
+        for &hwnd in &self.windows {
+            let exists = platform::is_window(hwnd);
+            let on_vd = exists && platform::is_window_on_current_vd(hwnd);
+            let tileable = exists && platform::is_window_tileable(hwnd);
+            let ignored = exists && self.is_ignored(hwnd);
+            if exists && on_vd && tileable && !ignored {
+                ordered.push(hwnd);
+            } else {
+                crate::log!(
+                    "tracker.full_scan: DROPPED hwnd={:#x} exists={} on_vd={} tileable={} ignored={} title='{}' class='{}'",
+                    hwnd.0 as usize, exists, on_vd, tileable, ignored,
+                    if exists { platform::get_window_title(hwnd) } else { String::new() },
+                    if exists { platform::get_window_class_name(hwnd) } else { String::new() }
+                );
+            }
+        }
 
         // Discover tileable windows on the current VD.
         if let Ok(all) = platform::get_windows_on_current_vd() {
@@ -198,17 +207,31 @@ impl WindowTracker {
                 }
                 WindowEvent::Destroyed(handle) | WindowEvent::Minimized(handle) => {
                     let hwnd = handle.to_hwnd();
+                    crate::log!("tracker: {:?} hwnd={:#x} title='{}'",
+                        evt, hwnd.0 as usize, platform::get_window_title(hwnd));
                     if self.windows.contains(&hwnd) {
                         self.remove(hwnd);
                         changed = true;
                     }
-                    self.moving = false;
+                    // Clear the moving flag only if the destroyed/minimized
+                    // window is the one being moved — other windows must not
+                    // interrupt an active drag.
+                    if self.moving_window == Some(hwnd) {
+                        crate::log!("tracker: moving_window cleared by destroy/minimize hwnd={:#x}", hwnd.0 as usize);
+                        self.moving_window = None;
+                    }
                 }
-                WindowEvent::MoveStart(_) => {
-                    self.moving = true;
+                WindowEvent::MoveStart(handle) => {
+                    crate::log!("tracker: MoveStart hwnd={:#x}", handle.to_hwnd().0 as usize);
+                    self.moving_window = Some(handle.to_hwnd());
                 }
-                WindowEvent::Moved(_) => {
-                    self.moving = false;
+                WindowEvent::Moved(handle) => {
+                    if self.moving_window == Some(handle.to_hwnd()) {
+                        crate::log!("tracker: Moved (MOVESIZEEND) hwnd={:#x} -> moving_window cleared", handle.to_hwnd().0 as usize);
+                        self.moving_window = None;
+                    } else {
+                        crate::log!("tracker: Moved hwnd={:#x} IGNORED (moving_window={:?})", handle.to_hwnd().0 as usize, self.moving_window.map(|h| h.0 as usize));
+                    }
                 }
                 WindowEvent::ForegroundChanged(_) => {
                     // Handled by the border overlay each loop iteration.
@@ -218,14 +241,36 @@ impl WindowTracker {
 
         // Periodic scan fallback (catches events the hook may miss and
         // windows that moved to/from the current virtual desktop).
+        // Skipped during an active move/resize: the system temporarily
+        // removes WS_THICKFRAME from the dragged window, which makes
+        // is_window_tileable() return false and would drop the window
+        // from tracking mid-drag. The left-button check is a safety net
+        // for spurious MOVESIZEEND events that Windows fires mid-drag
+        // (Aero Snap, cross-monitor transitions) — while the button is
+        // physically held, the scan stays off even if moving_window was
+        // cleared by such an event.
         if self.scan_enabled
+            && self.moving_window.is_none()
+            && !platform::is_left_mouse_button_pressed()
             && self.last_scan.elapsed().as_millis() >= self.scan_interval_ms as u128
         {
             let before = self.windows.clone();
             self.full_scan();
+            self.scan_skip_logged = false;
             if self.windows != before {
+                crate::log!("tracker: scan CHANGED windows {:?} -> {:?}",
+                    before.iter().map(|w| w.0 as usize).collect::<Vec<_>>(),
+                    self.windows.iter().map(|w| w.0 as usize).collect::<Vec<_>>());
                 changed = true;
             }
+        } else if self.scan_enabled
+            && self.last_scan.elapsed().as_millis() >= self.scan_interval_ms as u128
+            && !self.scan_skip_logged
+        {
+            crate::log!("tracker: scan SKIPPED (moving_window={:?}, left_held={})",
+                self.moving_window.map(|h| h.0 as usize),
+                platform::is_left_mouse_button_pressed());
+            self.scan_skip_logged = true;
         }
 
         changed
@@ -238,7 +283,7 @@ impl WindowTracker {
 
     /// Whether a window is currently being moved/resized by the user.
     pub fn is_moving(&self) -> bool {
-        self.moving
+        self.moving_window.is_some()
     }
 
     /// Resets the periodic scan timer to now.

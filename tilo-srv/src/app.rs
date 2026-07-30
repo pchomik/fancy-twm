@@ -1,7 +1,7 @@
 use crate::config::AppConfig;
 use crate::border::BorderOverlay;
 use crate::ipc::IpcServerController;
-use crate::platform::{VirtualDesktopTracker, is_mouse_button_pressed, pump_windows_messages};
+use crate::platform::{VirtualDesktopTracker, is_left_mouse_button_pressed, pump_windows_messages};
 use crate::tiling::{MoveDir, TilingEngine};
 use crate::tracker::WindowTracker;
 use crate::tray::TrayController;
@@ -33,7 +33,8 @@ pub struct App {
     tiling: TilingEngine,
     border: Option<BorderOverlay>,
     last_position_check: Instant,
-    mouse_was_pressed: bool,
+    was_moving: bool,
+    was_left_held: bool,
 }
 
 impl App {
@@ -59,7 +60,8 @@ impl App {
             tiling,
             border,
             last_position_check: Instant::now(),
-            mouse_was_pressed: false,
+            was_moving: false,
+            was_left_held: false,
         })
     }
 
@@ -80,15 +82,6 @@ impl App {
                 break;
             }
 
-            let mouse_pressed = is_mouse_button_pressed();
-
-            if self.mouse_was_pressed && !mouse_pressed {
-                self.last_position_check = Instant::now();
-                self.window_tracker.reset_scan_timer();
-                self.retile();
-            }
-            self.mouse_was_pressed = mouse_pressed;
-
             // Detect virtual desktop changes.
             if let Some(new_vd) = self.vd_tracker.check_for_changes() {
                 crate::log!("app: VD changed to {}", new_vd);
@@ -103,21 +96,45 @@ impl App {
             }
 
             // Poll window tracker (WinEvent hooks + periodic scan).
-            if self.window_tracker.poll() && !mouse_pressed {
+            // Read is_moving() AFTER poll() so the flag reflects events
+            // drained in this tick (e.g. MoveStart arriving together with
+            // a periodic-scan change).
+            let changed = self.window_tracker.poll();
+            let moving = self.window_tracker.is_moving();
+            // Safety net: Windows can fire spurious MOVESIZEEND mid-drag
+            // (Aero Snap, cross-monitor), clearing `moving` while the user
+            // still holds the button. The hardware-level button check
+            // catches this so retile/verify stay suppressed for the whole
+            // physical drag. Not used for the border — a simple click
+            // (~100 ms) must not cause a border blink.
+            let left_held = is_left_mouse_button_pressed();
+
+            // Debug: log state transitions only (not every tick).
+            if moving != self.was_moving || left_held != self.was_left_held {
+                crate::log!("app: moving={} left_held={} changed={} windows={:?}",
+                    moving, left_held, changed,
+                    self.window_tracker.windows().iter().map(|w| w.0 as usize).collect::<Vec<_>>());
+            }
+
+            if changed && !moving && !left_held {
+                crate::log!("app: retile from poll (changed=true, moving=false, left_held=false)");
                 self.retile();
             }
 
             // Update active-window border overlay.
             if let Some(border) = &mut self.border {
-                border.update(self.window_tracker.is_moving() || mouse_pressed);
+                border.update(moving);
             }
 
             // Periodic position verification & correction.
-            if self.config.periodic_check.enabled && !mouse_pressed {
+            if self.config.periodic_check.enabled && !moving && !left_held {
                 let interval = Duration::from_millis(self.config.periodic_check.interval_ms);
                 if self.last_position_check.elapsed() >= interval {
-                    self.tiling
+                    let corrected = self.tiling
                         .verify_positions(self.config.periodic_check.tolerance);
+                    if corrected > 0 {
+                        crate::log!("app: verify_positions corrected {} windows", corrected);
+                    }
                     self.last_position_check = Instant::now();
                 }
             }
@@ -187,6 +204,16 @@ impl App {
                     }
                 }
             }
+
+            // Re-tile once when a window move/resize ends.
+            if self.was_moving && !moving {
+                crate::log!("app: retile from was_moving transition (moving ended)");
+                self.last_position_check = Instant::now();
+                self.window_tracker.reset_scan_timer();
+                self.retile();
+            }
+            self.was_moving = moving;
+            self.was_left_held = left_held;
 
             self.tray.read();
 

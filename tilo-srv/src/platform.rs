@@ -128,18 +128,17 @@ use windows_win10::Win32::UI::Input::KeyboardAndMouse::GetAsyncKeyState;
 use windows_win11::Win32::UI::Input::KeyboardAndMouse::GetAsyncKeyState;
 
 const VK_LBUTTON: i32 = 0x01;
-const VK_RBUTTON: i32 = 0x02;
 
-/// Returns `true` while the left or right mouse button is held down.
+/// Returns `true` while the left mouse button is held down.
 ///
 /// Uses `GetAsyncKeyState` which queries the hardware-level key state,
-/// independent of focus or message queue.
-pub fn is_mouse_button_pressed() -> bool {
-    unsafe {
-        let left = GetAsyncKeyState(VK_LBUTTON);
-        let right = GetAsyncKeyState(VK_RBUTTON);
-        (left < 0) || (right < 0)
-    }
+/// independent of focus or message queue. Used only as a safety net to
+/// suppress the periodic scan while the user physically holds the button
+/// during a window drag — Windows can fire spurious `MOVESIZEEND` events
+/// mid-drag (e.g. Aero Snap, cross-monitor), which would otherwise clear
+/// the `moving_window` flag and let the scan run.
+pub fn is_left_mouse_button_pressed() -> bool {
+    unsafe { GetAsyncKeyState(VK_LBUTTON) < 0 }
 }
 
 // ── Foreground window ────────────────────────────────────────────────

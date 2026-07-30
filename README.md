@@ -214,6 +214,36 @@ cargo build --release --no-default-features --features windows11
 
 Binaries are written to `target/release/`.
 
+## Troubleshooting
+
+### Windows minimize other windows during drag (Aero Shake)
+
+Windows has a built-in gesture called **Aero Shake**: when you grab a window
+by its title bar and shake it (move it quickly back and forth), Windows
+minimizes all other windows. This can interfere with Tilo because the
+minimized windows are removed from tiling until they are restored.
+
+If you notice other windows disappearing while dragging a window, disable
+Aero Shake:
+
+**Windows 11:**
+Settings → System → Multitasking → expand **Snap windows** → uncheck
+**Title bar window shake**.
+
+**Windows 10:**
+Settings → System → Multitasking → under **Snap windows** → turn off
+**Shake window**.
+
+**Both (registry):**
+
+```powershell
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
+    -Name "DisallowShaking" -Value 1 -Type DWord
+Stop-Process -Name explorer -Force
+```
+
+To re-enable, set the value to `0` or delete the `DisallowShaking` entry.
+
 ## Limitations
 
 ### Visual blink on desktop switch
