@@ -216,7 +216,7 @@ pub fn move_window_to_desktop_by_index(hwnd: HWND, index: usize) -> Result<()> {
 
     #[cfg(feature = "windows11")]
     {
-        move_window_to_desktop(desktops[index].clone(), &hwnd)
+        move_window_to_desktop(desktops[index], &hwnd)
             .map_err(|e| anyhow::anyhow!("Failed to move window to desktop {index}: {e:?}"))?;
     }
 
@@ -241,7 +241,7 @@ pub fn switch_to_desktop_by_index(index: usize) -> Result<()> {
 
     #[cfg(feature = "windows11")]
     {
-        switch_desktop(desktops[index].clone())
+        switch_desktop(desktops[index])
             .map_err(|e| anyhow::anyhow!("Failed to switch to desktop {index}: {e:?}"))?;
     }
 
@@ -312,11 +312,13 @@ pub struct MonitorInfo {
     /// Usable work area (excluding taskbar).
     pub work_area: Rect,
     /// Device name, e.g. `\\.\DISPLAY1`.
+    #[allow(dead_code)]
     pub name: String,
 }
 
 /// Horizontal direction for cross-monitor navigation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum Direction {
     Left,
     Right,
@@ -425,6 +427,7 @@ pub fn get_monitor_dpi(handle: HMONITOR) -> u32 {
 }
 
 /// Returns the adjacent monitor in the given direction, if one exists.
+#[allow(dead_code)]
 pub fn get_adjacent_monitor(current: &MonitorInfo, direction: Direction) -> Option<MonitorInfo> {
     let monitors = enum_monitors().ok()?;
     let current_idx = monitors.iter().position(|m| m.handle == current.handle)?;
@@ -479,6 +482,7 @@ impl VirtualDesktopTracker {
         self.current_index
     }
 
+    #[allow(dead_code)]
     pub fn desktop_count(&self) -> usize {
         self.desktop_count
     }

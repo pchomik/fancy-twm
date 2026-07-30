@@ -1,11 +1,12 @@
 use anyhow::{Context, Result};
-use image;
 use tray_icon::{
     Icon, TrayIcon, TrayIconBuilder,
     menu::{Menu, MenuEvent, MenuItem},
 };
 
 pub struct TrayController {
+    /// Must be kept alive for the tray icon to remain visible.
+    #[allow(dead_code)]
     icon: TrayIcon,
     menu_items: Vec<MenuItem>,
 }
@@ -39,12 +40,10 @@ impl TrayController {
     }
 
     pub fn read(&self) {
-        if let Ok(event) = MenuEvent::receiver().try_recv() {
-            if let Some(menu_item) = self.menu_items.iter().find(|&item| item.id() == event.id()) {
-                if menu_item.text() == "Quit" {
+        if let Ok(event) = MenuEvent::receiver().try_recv()
+            && let Some(menu_item) = self.menu_items.iter().find(|&item| item.id() == event.id())
+                && menu_item.text() == "Quit" {
                     std::process::exit(0);
                 }
-            }
-        }
     }
 }

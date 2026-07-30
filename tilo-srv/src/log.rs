@@ -19,15 +19,14 @@ pub fn init() {
         .unwrap_or(false);
     ENABLED.store(enabled, Ordering::Relaxed);
 
-    if enabled {
-        if let Some(dir) = dirs::home_dir().map(|p| p.join(".config").join("tilo")) {
+    if enabled
+        && let Some(dir) = dirs::home_dir().map(|p| p.join(".config").join("tilo")) {
             let _ = std::fs::create_dir_all(&dir);
             let path = dir.join("tilosrv.log");
             // Truncate on start so each run gets a fresh log.
             let _ = std::fs::write(&path, "");
             let _ = LOG_PATH.set(path);
         }
-    }
 }
 
 /// Returns whether logging is enabled.

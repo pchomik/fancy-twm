@@ -196,11 +196,10 @@ impl App {
                         self.tiling.cycle_layout(&self.config);
                     }
                     Command::SetLayout => {
-                        if let Some(args) = action.args {
-                            if let Some(layout_name) = args.first() {
+                        if let Some(args) = action.args
+                            && let Some(layout_name) = args.first() {
                                 self.tiling.set_layout(layout_name, &self.config);
                             }
-                        }
                     }
                 }
             }

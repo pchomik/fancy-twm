@@ -46,9 +46,8 @@ fn handle_connection(
     sender: &mpsc::Sender<PipeMessage>,
 ) {
     let mut buffer = MsgBuf::new_owned(Vec::new());
-    if let Ok(_result) = stream.recv_msg(&mut buffer, None) {
-        if let Ok(msg) = serde_json::from_slice::<PipeMessage>(buffer.filled_part()) {
+    if let Ok(_result) = stream.recv_msg(&mut buffer, None)
+        && let Ok(msg) = serde_json::from_slice::<PipeMessage>(buffer.filled_part()) {
             let _ = sender.send(msg);
         }
-    }
 }

@@ -48,6 +48,8 @@ impl AppConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct VirtualDesktop {
+    /// Desktop name from config (used for identification).
+    #[allow(dead_code)]
     pub name: String,
     #[serde(default)]
     pub monitors: Vec<MonitorLayout>,
@@ -59,6 +61,7 @@ pub struct MonitorLayout {
     /// Optional monitor device name (e.g. `\\.\DISPLAY1`). When omitted the
     /// layout applies to monitors by position (index) left-to-right.
     #[serde(default)]
+    #[allow(dead_code)]
     pub monitor: Option<String>,
     pub layout: Layout,
     /// Maximum number of column areas (Columns layout).

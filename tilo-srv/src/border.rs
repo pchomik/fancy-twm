@@ -222,18 +222,16 @@ impl BorderOverlay {
         let title = platform::get_window_title(fg);
         let process = platform::get_window_process_name(fg);
         for rule in &self.rules {
-            if let Some(re) = &rule.process {
-                if re.is_match(&process) {
+            if let Some(re) = &rule.process
+                && re.is_match(&process) {
                     self.hide();
                     return;
                 }
-            }
-            if let Some(re) = &rule.title {
-                if re.is_match(&title) {
+            if let Some(re) = &rule.title
+                && re.is_match(&title) {
                     self.hide();
                     return;
                 }
-            }
         }
 
         if platform::is_window_minimized(fg) || platform::is_window_maximized_or_fullscreen(fg) {
@@ -322,7 +320,7 @@ impl BorderOverlay {
                     #[cfg(feature = "windows10")]
                     biCompression: BI_RGB,
                     #[cfg(feature = "windows11")]
-                    biCompression: BI_RGB.0 as u32,
+                    biCompression: BI_RGB.0,
                     ..Default::default()
                 },
                 ..Default::default()
