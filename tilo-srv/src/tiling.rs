@@ -21,6 +21,17 @@ use crate::position;
 pub use crate::tiling_state::MoveDir;
 use crate::tiling_state::{AreaState, MoveTarget, MovementLayout, resolve_move};
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
+
+/// How long a recent correction suppresses re-correcting the same window
+/// to the same target rect (anti-thrash for windows that resist tiling).
+const CORRECTION_MEMORY: Duration = Duration::from_millis(2000);
+
+/// Records the last position correction applied to a window.
+struct CorrectionRecord {
+    rect: Rect,
+    at: Instant,
+}
 
 /// Geometry for a single physical monitor.
 struct MonitorTiler {
@@ -46,6 +57,9 @@ pub struct TilingEngine {
     layout_overrides: HashMap<(usize, usize), LayoutSpec>,
     /// Current virtual desktop index (needed for override lookup).
     current_vd: usize,
+    /// Recent corrections keyed by window handle. Used to stop fighting
+    /// windows that keep refusing the same target rect.
+    recent_corrections: HashMap<usize, CorrectionRecord>,
 }
 
 /// A resolved layout for one monitor.
@@ -115,6 +129,7 @@ impl TilingEngine {
             layouts,
             layout_overrides: HashMap::new(),
             current_vd: vd_index,
+            recent_corrections: HashMap::new(),
         })
     }
 
@@ -406,8 +421,20 @@ impl TilingEngine {
     /// Verifies normally-sized window positions and corrects any that drifted
     /// beyond `tolerance`. Maximized and fullscreen windows remain untouched.
     /// Returns the number of windows corrected.
-    pub fn verify_positions(&self, tolerance: i32) -> usize {
+    ///
+    /// Anti-thrash: some windows snap back after every `SetWindowPos` (they
+    /// resist tiling). Without protection they would be "corrected" on every
+    /// periodic check, causing constant window churn — and, with the border
+    /// overlay enabled, a full border re-render per cycle. A window that is
+    /// still off the same target rect within `CORRECTION_MEMORY` of its last
+    /// correction is skipped while it keeps resisting. Pass `force = true`
+    /// to bypass this (used by the rapid post-move DPI-drift verification).
+    pub fn verify_positions(&mut self, tolerance: i32, force: bool) -> usize {
         let mut corrected = 0;
+        let now = Instant::now();
+        // Drop stale records so settled windows can be corrected again.
+        self.recent_corrections
+            .retain(|_, rec| now.duration_since(rec.at) < CORRECTION_MEMORY);
 
         for (monitor_index, (tiler, spec)) in
             self.tilers.iter().zip(self.layouts.iter()).enumerate()
@@ -437,7 +464,32 @@ impl TilingEngine {
                         continue;
                     };
                     if rects_differ(&actual, &expected, tolerance) {
+                        let key = hwnd.0 as usize;
+                        let resists = !force
+                            && matches!(
+                                self.recent_corrections.get(&key),
+                                Some(rec) if rec.rect == expected
+                            );
+                        if resists {
+                            // Still off the same target shortly after being
+                            // placed there. Refresh the record so the window
+                            // stays suppressed while it resists; it expires
+                            // naturally once the window settles.
+                            if let Some(rec) = self.recent_corrections.get_mut(&key) {
+                                rec.at = now;
+                            }
+                            crate::log!(
+                                "verify: skipping resisting window hwnd={:#x} target={:?}",
+                                key, expected
+                            );
+                            continue;
+                        }
                         platform::set_window_pos(*hwnd, expected);
+                        self.recent_corrections.insert(
+                            key,
+                            CorrectionRecord { rect: expected, at: now },
+                        );
+                        crate::log!("verify: corrected hwnd={:#x} target={:?}", key, expected);
                         corrected += 1;
                     }
                 }

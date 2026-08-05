@@ -85,7 +85,7 @@ impl App {
             // Detect virtual desktop changes.
             if let Some(new_vd) = self.vd_tracker.check_for_changes() {
                 crate::log!("app: VD changed to {}", new_vd);
-                if let Some(border) = &self.border {
+                if let Some(border) = &mut self.border {
                     border.hide();
                 }
                 self.tiling.on_vd_changed(&self.config, new_vd);
@@ -131,7 +131,7 @@ impl App {
                 let interval = Duration::from_millis(self.config.periodic_check.interval_ms);
                 if self.last_position_check.elapsed() >= interval {
                     let corrected = self.tiling
-                        .verify_positions(self.config.periodic_check.tolerance);
+                        .verify_positions(self.config.periodic_check.tolerance, false);
                     if corrected > 0 {
                         crate::log!("app: verify_positions corrected {} windows", corrected);
                     }
@@ -140,7 +140,7 @@ impl App {
             }
 
             if let Some(action) = self.ipc_server.read() {
-                if let Some(border) = &self.border {
+                if let Some(border) = &mut self.border {
                     border.hide();
                 }
                 match action.command {
@@ -239,7 +239,7 @@ impl App {
         // resizes from the target window's WM_DPICHANGED handler.
         for _ in 0..8 {
             thread::sleep(Duration::from_millis(25));
-            self.tiling.verify_positions(self.config.periodic_check.tolerance);
+            self.tiling.verify_positions(self.config.periodic_check.tolerance, true);
         }
     }
 }

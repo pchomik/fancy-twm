@@ -850,6 +850,15 @@ fn get_invisible_borders(hwnd: HWND) -> (i32, i32, i32, i32) {
 /// in response to the move — this prevents a visible double-resize when moving
 /// between monitors with different DPI settings.
 pub fn set_window_pos(hwnd: HWND, rect: Rect) -> bool {
+    // No-op when the window already occupies the requested visible rect.
+    // Re-asserting an unchanged position would still make DWM reprocess the
+    // frame, which costs CPU and triggers border-overlay re-renders.
+    if let Some(current) = get_visible_window_rect(hwnd)
+        && current == rect
+    {
+        return true;
+    }
+
     let (bl, bt, br, bb) = get_invisible_borders(hwnd);
 
     let adjusted = Rect {

@@ -101,6 +101,8 @@ pub struct BorderOverlay {
     color: D2D1_COLOR_F,
     rules: Vec<CompiledRule>,
     last_foreground: Option<HWND>,
+    /// Extended frame bounds rendered last tick; `None` while hidden.
+    last_bounds: Option<Rect>,
 }
 
 impl BorderOverlay {
@@ -185,6 +187,7 @@ impl BorderOverlay {
                 color: parse_hex_color(&config.color),
                 rules,
                 last_foreground: None,
+                last_bounds: None,
             }))
         }
     }
@@ -207,6 +210,21 @@ impl BorderOverlay {
 
         let changed = self.last_foreground != Some(fg);
         self.last_foreground = Some(fg);
+
+        // Fast path: same window as last tick and not minimized. A single
+        // bounds query decides whether anything moved; string lookups, regex
+        // ignore rules, DPI scaling and rendering are all skipped. Ignore and
+        // visibility rules were evaluated when focus moved to this window and
+        // are re-evaluated below whenever the bounds change. A layered window
+        // keeps its contents, so skipping the render is visually safe.
+        if !changed
+            && self.last_bounds.is_some()
+            && !platform::is_window_minimized(fg)
+            && let Some(bounds) = platform::get_extended_frame_bounds(fg)
+            && Some(bounds) == self.last_bounds
+        {
+            return;
+        }
 
         if !platform::is_window(fg) || !platform::is_window_visible(fg) {
             self.hide();
@@ -263,9 +281,9 @@ impl BorderOverlay {
             return;
         }
 
-        // Skip re-render when nothing moved (cheap guard). Rect changes are
-        // caught because position verification triggers re-tile + update.
-        let _ = changed;
+        // Bounds changed (or focus switched): remember what we render. Any
+        // hide() path clears last_bounds, so the next show always re-renders.
+        self.last_bounds = Some(bounds);
 
         unsafe {
             self.render(
@@ -279,7 +297,8 @@ impl BorderOverlay {
     }
 
     /// Hides the overlay window.
-    pub fn hide(&self) {
+    pub fn hide(&mut self) {
+        self.last_bounds = None;
         self.last_foreground_reset();
         #[cfg(feature = "windows10")]
         let insert_after = None;
