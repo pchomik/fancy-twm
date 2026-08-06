@@ -1,6 +1,6 @@
 <h1 style="display: flex">
-  <img src="tilo-srv/assets/tilo-128.png" alt="Tilo logo" width="48px" height="48px">
-  <span style="font-size: 38px; margin-left: 5px">Tilo</span>
+  <img src="tilo-srv/assets/tilo-128.png" alt="Tilo logo" width="32px" height="32px">
+  Tilo
 </h1>
 
 [![Build](https://github.com/pchomik/tilo/actions/workflows/build.yml/badge.svg)](https://github.com/pchomik/tilo/actions/workflows/build.yml)
