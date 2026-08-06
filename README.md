@@ -1,5 +1,5 @@
 <h1 style="display: flex">
-  <img src="tilo-srv/assets/tilo-128.png" alt="Tilo logo" width="32px" height="32px">
+  <img src="tilo-srv/assets/tilo-128.png" alt="Tilo logo" width="36px" height="36px">
   Tilo
 </h1>
 
