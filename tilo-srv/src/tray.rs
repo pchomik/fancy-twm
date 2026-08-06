@@ -33,7 +33,7 @@ impl TrayController {
     }
 
     fn load_icon() -> Result<Icon> {
-        let icon_data = include_bytes!("../assets/app.ico");
+        let icon_data = include_bytes!("../assets/tilo-32.png");
         let image = image::load_from_memory(icon_data)?.to_rgba8();
         let (width, height) = image.dimensions();
         Ok(Icon::from_rgba(image.into_raw(), width, height)?)
